@@ -39,6 +39,26 @@ target_link_libraries(paho_iot_hub_pnp_example
     az::iot::samples::common
 )
 
+# PnP Component Sample
+add_executable (paho_iot_hub_pnp_component_example
+  ${CMAKE_CURRENT_LIST_DIR}/src/paho_iot_hub_pnp_component_example.c
+  ${CMAKE_CURRENT_LIST_DIR}/src/pnp_helper.c
+)
+
+# SDK deps
+target_link_libraries(paho_iot_hub_pnp_component_example
+  PRIVATE
+    az::iot::hub
+)
+
+# External deps
+target_link_libraries(paho_iot_hub_pnp_component_example
+  PRIVATE
+    eclipse-paho-mqtt-c::paho-mqtt3cs-static
+    OpenSSL::SSL
+    OpenSSL::Crypto
+)
+
 # Telemetry (Certificates) Sample
 add_executable (paho_iot_hub_telemetry_example
   ${CMAKE_CURRENT_LIST_DIR}/src/paho_iot_hub_telemetry_example.c
