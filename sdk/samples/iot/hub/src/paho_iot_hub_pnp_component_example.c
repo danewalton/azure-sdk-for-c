@@ -27,6 +27,8 @@
 #include <azure/core/az_span.h>
 #include <azure/iot/az_iot_hub_client.h>
 
+#include "pnp_helper.h"
+
 #ifdef _MSC_VER
 // "'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead."
 #pragma warning(disable : 4996)
@@ -110,10 +112,6 @@ static char reported_property_topic[128];
 static const az_span desired_property_name = AZ_SPAN_LITERAL_FROM_STR("desired");
 static const az_span desired_property_version_name = AZ_SPAN_LITERAL_FROM_STR("$version");
 static const az_span desired_temp_property_name = AZ_SPAN_LITERAL_FROM_STR("targetTemperature");
-static const az_span desired_temp_response_value_name = AZ_SPAN_LITERAL_FROM_STR("value");
-static const az_span desired_temp_ack_code_name = AZ_SPAN_LITERAL_FROM_STR("ac");
-static const az_span desired_temp_ack_version_name = AZ_SPAN_LITERAL_FROM_STR("av");
-static const az_span desired_temp_ack_description_name = AZ_SPAN_LITERAL_FROM_STR("ad");
 static const az_span max_temp_reported_property_name
     = AZ_SPAN_LITERAL_FROM_STR("maxTempSinceLastReboot");
 static char reported_property_payload[128];
@@ -502,54 +500,6 @@ static int send_command_response(
   return rc;
 }
 
-// Build the JSON payload for the reported property
-static az_result build_confirmed_reported_property(
-    az_json_writer* json_builder,
-    az_span property_name,
-    double property_val,
-    int32_t ack_code_value,
-    int32_t ack_version_value,
-    az_span ack_description_value)
-{
-  AZ_RETURN_IF_FAILED(
-      az_json_writer_init(json_builder, AZ_SPAN_FROM_BUFFER(reported_property_payload), NULL));
-  AZ_RETURN_IF_FAILED(az_json_writer_append_begin_object(json_builder));
-  AZ_RETURN_IF_FAILED(az_json_writer_append_property_name(json_builder, property_name));
-  AZ_RETURN_IF_FAILED(az_json_writer_append_begin_object(json_builder));
-  AZ_RETURN_IF_FAILED(
-      az_json_writer_append_property_name(json_builder, desired_temp_response_value_name));
-  AZ_RETURN_IF_FAILED(
-      az_json_writer_append_double(json_builder, property_val, DOUBLE_DECIMAL_PLACE_DIGITS));
-  AZ_RETURN_IF_FAILED(
-      az_json_writer_append_property_name(json_builder, desired_temp_ack_code_name));
-  AZ_RETURN_IF_FAILED(az_json_writer_append_int32(json_builder, ack_code_value));
-  AZ_RETURN_IF_FAILED(
-      az_json_writer_append_property_name(json_builder, desired_temp_ack_version_name));
-  AZ_RETURN_IF_FAILED(az_json_writer_append_int32(json_builder, ack_version_value));
-  AZ_RETURN_IF_FAILED(
-      az_json_writer_append_property_name(json_builder, desired_temp_ack_description_name));
-  AZ_RETURN_IF_FAILED(az_json_writer_append_string(json_builder, ack_description_value));
-  AZ_RETURN_IF_FAILED(az_json_writer_append_end_object(json_builder));
-  AZ_RETURN_IF_FAILED(az_json_writer_append_end_object(json_builder));
-
-  return AZ_OK;
-}
-
-static az_result build_reported_property(
-    az_json_writer* json_builder,
-    az_span property_name,
-    double property_val)
-{
-  AZ_RETURN_IF_FAILED(
-      az_json_writer_init(json_builder, AZ_SPAN_FROM_BUFFER(reported_property_payload), NULL));
-  AZ_RETURN_IF_FAILED(az_json_writer_append_begin_object(json_builder));
-  AZ_RETURN_IF_FAILED(az_json_writer_append_property_name(json_builder, property_name));
-  AZ_RETURN_IF_FAILED(
-      az_json_writer_append_double(json_builder, property_val, DOUBLE_DECIMAL_PLACE_DIGITS));
-  AZ_RETURN_IF_FAILED(az_json_writer_append_end_object(json_builder));
-
-  return AZ_OK;
-}
 // Send the twin reported property to the service
 static int send_reported_temperature_property(
     double temp_value,
@@ -573,13 +523,23 @@ static int send_reported_temperature_property(
     return rc;
   }
 
+  char temp_value_as_str[8];
+  az_span temp_value_span = az_span_init((uint8_t*)temp_value_as_str, sizeof(temp_value_as_str));
+  AZ_RETURN_IF_FAILED(
+      az_span_dtoa(temp_value_span, temp_value, DOUBLE_DECIMAL_PLACE_DIGITS, &temp_value_span));
+
+  az_span reported_property_payload_span
+      = az_span_init((uint8_t*)reported_property_payload, sizeof(reported_property_payload));
   // Twin reported properties must be in JSON format. The payload is constructed here.
-  az_json_writer json_builder;
   if (is_max_reported_prop)
   {
     if (az_failed(
-            rc
-            = build_reported_property(&json_builder, max_temp_reported_property_name, temp_value)))
+            rc = pnp_helper_create_reported_property(
+                reported_property_payload_span,
+                AZ_SPAN_NULL,
+                max_temp_reported_property_name,
+                temp_value_span,
+                &reported_property_payload_span)))
     {
       return rc;
     }
@@ -587,10 +547,11 @@ static int send_reported_temperature_property(
   else
   {
     if (az_failed(
-            rc = build_confirmed_reported_property(
-                &json_builder,
+            rc = pnp_helper_create_reported_property_with_status(
+                reported_property_payload_span,
+                AZ_SPAN_NULL,
                 desired_temp_property_name,
-                temp_value,
+                temp_value_span,
                 200,
                 version,
                 AZ_SPAN_FROM_STR("success"))))
@@ -598,12 +559,14 @@ static int send_reported_temperature_property(
       return rc;
     }
   }
-  az_span json_payload = az_json_writer_get_json(&json_builder);
 
-  printf("Payload: %.*s\n", az_span_size(json_payload), (char*)az_span_ptr(json_payload));
+  printf(
+      "Payload: %.*s\n",
+      az_span_size(reported_property_payload_span),
+      (char*)az_span_ptr(reported_property_payload_span));
 
   // Publish the reported property payload to IoT Hub
-  rc = mqtt_publish_message(reported_property_topic, json_payload, 0);
+  rc = mqtt_publish_message(reported_property_topic, reported_property_payload_span, 0);
 
   return rc;
 }

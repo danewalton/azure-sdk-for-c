@@ -88,5 +88,16 @@ az_result pnp_helper_create_reported_property_with_status(
     int32_t ack_version,
     az_span ack_description);
 
+/**
+ * @brief Iteratively get the next desired property.
+ *
+ * @param[in] json_reader A pointer to the json reader from which the properties will be retrieved.
+ * @param[out] property_name An output span over the property name retrieved.
+ * @param[out] property_value An output span over the property value.
+ */
+az_result pnp_helper_get_next_desired_property(
+    az_json_reader* json_reader,
+    az_span* property_name,
+    az_span* property_value);
 
 #endif // _az_PNP_HELPER_H
