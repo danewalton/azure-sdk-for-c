@@ -211,33 +211,41 @@ az_result pnp_helper_create_reported_property_with_status(
   return result;
 }
 
-az_result pnp_helper_get_next_desired_property(
-    az_json_reader* json_reader,
-    az_span* property_name,
-    az_span* property_value)
+az_result pnp_helper_process_twin_data(
+    az_span payload,
+    pnp_helper_property_callback user_twin_callback,
+    void* user_twin_callback_context)
 {
   az_result result;
 
-  AZ_RETURN_IF_FAILED(az_json_reader_next_token(json_reader));
+  int32_t prop_version;
+  az_span component_name;
+  az_json_reader json_reader;
+  az_json_reader_init(&json_reader, payload, NULL);
 
-  if (az_json_token_is_text_equal(&json_reader->token, desired_property_name))
+  AZ_RETURN_IF_FAILED(az_json_reader_next_token(&json_reader));
+
+  if (az_json_token_is_text_equal(&json_reader.token, desired_property_name))
   {
-    if (json_reader->token.kind != AZ_JSON_TOKEN_BEGIN_OBJECT)
+    if (json_reader.token.kind != AZ_JSON_TOKEN_BEGIN_OBJECT)
     {
-      return AZ_ERROR_PARSER_UNEXPECTED_CHAR;
+      return AZ_ERROR_UNEXPECTED_CHAR;
     }
-    az_span prop_string;
-    AZ_RETURN_IF_FAILED(az_json_reader_next_token(json_reader));
-    prop_string = json_reader->token.slice;
-    strip_quotes_from_span(prop_string, property_name);
-    AZ_RETURN_IF_FAILED(az_json_reader_next_token(json_reader));
-    *property_value = json_reader->token.slice;
+    az_span prop_name;
+    az_json_token prop_value;
+    AZ_RETURN_IF_FAILED(az_json_reader_next_token(&json_reader));
+    prop_name = json_reader.token.slice;
+    strip_quotes_from_span(prop_name, &prop_name);
+    AZ_RETURN_IF_FAILED(az_json_reader_next_token(&json_reader));
+
+    user_twin_callback(component_name, prop_name, prop_value, prop_version, user_twin_callback_context);
+
     result = AZ_OK;
   }
   else
   {
     // Some error couldn't find the desired prop name
-    result = AZ_ERROR_PARSER_UNEXPECTED_CHAR;
+    result = AZ_ERROR_UNEXPECTED_CHAR;
   }
 
   return result;

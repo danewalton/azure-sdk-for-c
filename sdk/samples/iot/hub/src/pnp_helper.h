@@ -14,6 +14,13 @@
 #define PNP_STATUS_NOT_FOUND  404
 #define PNP_STATUS_INTERNAL_ERROR 500
 
+typedef void (*pnp_helper_property_callback)(
+    az_span component_name,
+    az_span property_name,
+    az_json_token property_value,
+    int32_t version,
+    void* user_context_callback);
+
 /**
  * @brief Gets the MQTT topic that must be used for device to cloud telemetry messages.
  * @remark Telemetry MQTT Publish messages must have QoS At least once (1).
@@ -95,9 +102,9 @@ az_result pnp_helper_create_reported_property_with_status(
  * @param[out] property_name An output span over the property name retrieved.
  * @param[out] property_value An output span over the property value.
  */
-az_result pnp_helper_get_next_desired_property(
-    az_json_reader* json_reader,
-    az_span* property_name,
-    az_span* property_value);
+az_result pnp_helper_process_twin_data(
+    az_span payload,
+    pnp_helper_property_callback user_twin_callback,
+    void* user_twin_callback_context);
 
 #endif // _az_PNP_HELPER_H
