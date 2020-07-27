@@ -17,7 +17,7 @@
 typedef void (*pnp_helper_property_callback)(
     az_span component_name,
     az_span property_name,
-    az_json_token property_value,
+    az_json_token* property_value,
     int32_t version,
     void* user_context_callback);
 
@@ -103,8 +103,13 @@ az_result pnp_helper_create_reported_property_with_status(
  * @param[out] property_value An output span over the property value.
  */
 az_result pnp_helper_process_twin_data(
-    az_span payload,
-    pnp_helper_property_callback user_twin_callback,
-    void* user_twin_callback_context);
+    az_json_reader json_reader,
+    int32_t is_partial,
+    az_span** sample_components_ptr,
+    int32_t sample_components_num,
+    char* scratch_buf,
+    int32_t scratch_buf_len,
+    pnp_helper_property_callback property_callback,
+    void* context_ptr);
 
 #endif // _az_PNP_HELPER_H
