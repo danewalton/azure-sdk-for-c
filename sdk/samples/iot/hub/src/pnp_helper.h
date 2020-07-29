@@ -9,6 +9,8 @@
 #include <azure/core/az_span.h>
 #include <azure/iot/az_iot_hub_client.h>
 
+#include "sample_pnp_thermostat_component.h"
+
 #define PNP_STATUS_SUCCESS 200
 #define PNP_STATUS_BAD_FORMAT 400
 #define PNP_STATUS_NOT_FOUND  404
@@ -49,13 +51,14 @@ az_result pnp_helper_get_telemetry_topic(
 /**
  * @brief Parse a JSON payload for a PnP component command
  *
- * @param[in] json_payload Input JSON payload containing the details for the component command.
- * @param[out]
+ * @param[in] component_command Input JSON payload containing the details for the component command.
+ * @param[out] component_name The parsed component name (if it exists).
+ * @param[out] command_name The parsed command name.
  */
 az_result pnp_helper_parse_command_name(
     az_span component_command,
     az_span* component_name,
-    az_span* pnp_command_name);
+    az_span* command_name);
 
 /**
  * @brief Build a reported property
@@ -92,14 +95,20 @@ az_result pnp_helper_create_reported_property_with_status(
     az_span property_json_value,
     int32_t ack_value,
     int32_t ack_version,
-    az_span ack_description);
+    az_span ack_description,
+    az_span* out_span);
 
 /**
  * @brief Iteratively get the next desired property.
  *
  * @param[in] json_reader A pointer to the json reader from which the properties will be retrieved.
- * @param[out] property_name An output span over the property name retrieved.
- * @param[out] property_value An output span over the property value.
+ * @param[in] is_partial Boolean stating whether the JSON document is partial or not.
+ * @param[in] sample_components_ptr A pointer to a set of `az_span` pointers containing all the names for components.
+ * @param[in] sample_components_num Number of components in the set pointed to by `sample_components_ptr`.
+ * @param[in] scratch_buf Scratch buffer to place parsed JSON values.
+ * @param[in] scratch_buf_len Length of `scratch_buf`. 
+ * @param[in] property_callback The callback which is called on each twin property.
+ * @param[in] context_ptr Pointer to user context.
  */
 az_result pnp_helper_process_twin_data(
     az_json_reader json_reader,

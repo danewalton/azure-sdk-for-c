@@ -67,15 +67,15 @@ static az_span boot_time_span;
 // is described in the coresponding DTMI. Should you choose to program your own PnP capable device,
 // the functionality would need to match the DTMI and you would need to update the below 'model_id'.
 // Please see the sample README for more information on this DTMI.
-static const az_span model_id = "dtmi:com:example:TemperatureController;1";
+static const az_span model_id = AZ_SPAN_LITERAL_FROM_STR("dtmi:com:example:TemperatureController;1");
 static sample_pnp_thermostat_component sample_thermostat_1;
-static const az_span sample_thermostat_1_component = "thermostat1";
+static const az_span sample_thermostat_1_component = AZ_SPAN_LITERAL_FROM_STR("thermostat1");
 static sample_pnp_thermostat_component sample_thermostat_2;
-static const az_span sample_thermostat_2_component = "thermostat2";
-static const az_span sample_device_info_component = "deviceInformation";
-static const az_span* sample_components[] = { sample_thermostat_1_component,
-                                              sample_thermostat_2_component,
-                                              sample_device_info_component };
+static const az_span sample_thermostat_2_component = AZ_SPAN_LITERAL_FROM_STR("thermostat2");
+static const az_span sample_device_info_component = AZ_SPAN_LITERAL_FROM_STR("deviceInformation");
+static const az_span* sample_components[] = { &sample_thermostat_1_component,
+                                              &sample_thermostat_2_component,
+                                              &sample_device_info_component };
 static const int32_t sample_components_num
     = sizeof(sample_components) / sizeof(sample_components[0]);
 static bool sample_device_info_sent;
@@ -289,8 +289,6 @@ int main(void)
 
 static az_result components_init()
 {
-  az_result result;
-
   AZ_RETURN_IF_FAILED(sample_pnp_thermostat_init(
       &sample_thermostat_1, sample_thermostat_1_component, DEFAULT_START_TEMP_CELSIUS));
   AZ_RETURN_IF_FAILED(sample_pnp_thermostat_init(
@@ -572,7 +570,8 @@ static int send_reported_temperature_property(
                 temp_value_span,
                 200,
                 version,
-                AZ_SPAN_FROM_STR("success"))))
+                AZ_SPAN_FROM_STR("success"),
+                &reported_property_payload_span)))
     {
       return rc;
     }
@@ -699,7 +698,7 @@ static void update_device_temp(double temp, bool* max_temp_changed)
   *max_temp_changed = ret;
 }
 
-void (*pnp_helper_property_callback)(
+void sample_property_callback(
     az_span component_name,
     az_span property_name,
     az_json_token* property_value,
@@ -763,7 +762,7 @@ static void handle_twin_message(
           sample_components_num,
           scratch_buf,
           sizeof(scratch_buf),
-          pnp_helper_property_callback property_callback,
+          sample_property_callback,
           NULL);
       if (az_failed(
               result = parse_twin_desired_temperature_property(
@@ -812,15 +811,34 @@ static void handle_twin_message(
   }
 }
 
+static az_result sample_pnp_temp_controller_process_command(
+    az_span component_name,
+    az_span pnp_command_name,
+    az_span response_topic_span,
+    az_span response_payload_span,
+    az_span* out_response_topic_span,
+    az_span* out_response_payload_span)
+{
+  az_result result;
+
+  result = AZ_OK;
+
+  return result;
+}
+
 // Invoke the requested command if supported and return status | Return error otherwise
 static void handle_command_message(
     MQTTClient_message* message,
     az_iot_hub_client_method_request* command_request)
 {
+  az_result result;
+
+  (void)message;
+
   az_span command_response_payload = AZ_SPAN_FROM_BUFFER(commands_response_payload);
   az_span component_name;
   az_span command_name;
-  if ((status = pnp_helper_parse_command_name(
+  if ((result = pnp_helper_parse_command_name(
            command_request->name,
            component_name,
            command_name))
@@ -829,7 +847,7 @@ static void handle_command_message(
     printf("Failed to parse command name: error code = 0x%08x\r\n", status);
   }
   else if (
-      (status = sample_pnp_thermostat_process_command(
+      (result = sample_pnp_thermostat_process_command(
            &sample_thermostat_1,
            component_name,
            command_name,
@@ -837,7 +855,7 @@ static void handle_command_message(
            command_response_payload,
            &command_response_topic,
            &command_response_payload))
-      == NX_AZURE_IOT_SUCCESS)
+      == AZ_OK)
   {
     printf(
         "Successfully executed command %.*s on thermostat 1\r\n",
@@ -845,7 +863,7 @@ static void handle_command_message(
         az_span_ptr(command_name));
   }
   else if (
-      (status = sample_pnp_thermostat_process_command(
+      (result = sample_pnp_thermostat_process_command(
            &sample_thermostat_2,
            component_name,
            command_name,
@@ -853,26 +871,26 @@ static void handle_command_message(
            command_response_payload,
            &command_response_topic,
            &command_response_payload))
-      == NX_AZURE_IOT_SUCCESS)
+      == AZ_OK)
   {
     printf(
         "Successfully executed command %.*s on thermostat 2\r\n",
         az_span_size(command_name),
         az_span_ptr(command_name);
   }
-  else if ((status = sample_pnp_temp_controller_process_command(
+  else if ((result = sample_pnp_temp_controller_process_command(
                 component_name,
                 command_name,
                 command_response_topic,
-                command_response_paylaod,
+                command_response_payload,
                 &command_response_topic,
                 &command_response_payload))
-      == NX_AZURE_IOT_SUCCESS)
+      == AZ_OK)
       {
         printf(
             "Successfully executed command %.*s on controller \r\n",
             az_span_size(command_name),
-            az_span_ptr(command_name))
+            az_span_ptr(command_name));
   }
 
 //  if (az_span_is_content_equal(report_command_name_span, command_request->name))
