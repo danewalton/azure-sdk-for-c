@@ -111,9 +111,9 @@ az_result pnp_helper_create_reported_property_with_status(
  * @param[in] context_ptr Pointer to user context.
  */
 az_result pnp_helper_process_twin_data(
-    az_json_reader json_reader,
+    az_json_reader* json_reader,
     bool is_partial,
-    az_span** sample_components_ptr,
+    const az_span** sample_components_ptr,
     int32_t sample_components_num,
     char* scratch_buf,
     int32_t scratch_buf_len,

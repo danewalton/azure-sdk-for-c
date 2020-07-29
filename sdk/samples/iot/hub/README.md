@@ -162,6 +162,9 @@ with correct values substituted for each field.
 - **Telemetry**: Device sends a JSON message with the field name `temperature` and the `double` value of the temperature.
 - **Twin**: Desired property with the field name `targetTemperature` and the `double` value for the desired temperature. Reported property with the field name `maxTempSinceLastReboot` and the `double` value for the highest temperature.Note that part of the PnP spec is a response to a desired property update from the service. The device will send back a reported property with a similarly named property and a set of "ack" values: `ac` for the HTTP-like ack code, `av` for ack version of the property, and an optional `ad` for an ack description.
 
+### [IoT Hub PnP Component (Certificates)][pnp_component_sample]
+Link to the component DTMI can be found [here](https://github.com/Azure/opendigitaltwins-dtdl/blob/master/DTDL/v2/samples/TemperatureController.json).
+
 ## Troubleshooting
 
 When interacting with the Azure IoT Hub using this C client library, errors are documented within the [MQTT State Machine][error_codes] requests.
@@ -189,6 +192,7 @@ This project welcomes contributions and suggestions. Find [more contributing][sd
 [twin_sample]: src/paho_iot_hub_twin_example.c
 [pnp_sample]: src/paho_iot_hub_pnp_example.c
 [iot_hub_mqtt]: https://docs.microsoft.com/en-us/azure/iot-hub/about-iot-hub
+[pnp_component_sample]: src/paho_iot_hub_pnp_component_example.c
 [error_codes]: ../../../../sdk/docs/iot/mqtt_state_machine.md#iot-service-errors
 [Eclipse_Paho]: https://www.eclipse.org/paho/clients/c/
 [sdk_readme_contributing]: https://github.com/Azure/azure-sdk-for-c/tree/master#contributing

@@ -136,7 +136,7 @@ static az_result sample_json_child_token_move(az_json_reader* json_reader, az_sp
 
 static az_result is_component_in_model(
     az_span component_name,
-    az_span** sample_components_ptr,
+    const az_span** sample_components_ptr,
     int32_t sample_components_num,
     int32_t* out_index)
 {
@@ -331,7 +331,8 @@ az_result pnp_helper_create_reported_property_with_status(
     az_span property_json_value,
     int32_t ack_value,
     int32_t ack_version,
-    az_span ack_description)
+    az_span ack_description,
+    az_span* out_span)
 {
   az_result result;
 
@@ -346,13 +347,16 @@ az_result pnp_helper_create_reported_property_with_status(
     result = build_reported_property_with_status(
         &json_writer, property_name, property_json_value, ack_value, ack_version, ack_description);
   }
+
+  *out_span = az_json_writer_get_json(&json_writer);
+
   return result;
 }
 
 az_result pnp_helper_process_twin_data(
-    az_json_reader json_reader,
+    az_json_reader* json_reader,
     bool is_partial,
-    az_span** sample_components_ptr,
+    const az_span** sample_components_ptr,
     int32_t sample_components_num,
     char* scratch_buf,
     int32_t scratch_buf_len,
@@ -364,13 +368,13 @@ az_result pnp_helper_process_twin_data(
   int32_t len;
   int32_t index;
 
-  if (!is_partial && sample_json_child_token_move(&json_reader, sample_iot_hub_twin_desired))
+  if (!is_partial && sample_json_child_token_move(json_reader, sample_iot_hub_twin_desired))
   {
     printf("Failed to get desired property\r\n");
     return AZ_ERROR_UNEXPECTED_CHAR;
   }
 
-  copy_json_reader = json_reader;
+  copy_json_reader = *json_reader;
   if (sample_json_child_token_move(&copy_json_reader, sample_iot_hub_twin_desired_version)
       || az_failed(az_json_token_get_int32(&(copy_json_reader.token), (int32_t*)&version)))
   {
@@ -378,18 +382,18 @@ az_result pnp_helper_process_twin_data(
     return AZ_ERROR_UNEXPECTED_CHAR;
   }
 
-  while (az_succeeded(az_json_reader_next_token(&json_reader)))
+  while (az_succeeded(az_json_reader_next_token(json_reader)))
   {
-    if (json_reader.token.kind == AZ_JSON_TOKEN_PROPERTY_NAME)
+    if (json_reader->token.kind == AZ_JSON_TOKEN_PROPERTY_NAME)
     {
       if (az_failed(az_json_token_get_string(
-              &(json_reader.token), (char*)scratch_buf, (int32_t)scratch_buf_len, (int32_t*)&len)))
+              &(json_reader->token), (char*)scratch_buf, (int32_t)scratch_buf_len, (int32_t*)&len)))
       {
         printf("Failed to string value for property name\r\n");
         return AZ_ERROR_UNEXPECTED_CHAR;
       }
 
-      if (az_failed(az_json_reader_next_token(&json_reader)))
+      if (az_failed(az_json_reader_next_token(json_reader)))
       {
         printf("Failed to next token\r\n");
         return AZ_ERROR_UNEXPECTED_CHAR;
@@ -405,14 +409,14 @@ az_result pnp_helper_process_twin_data(
         continue;
       }
 
-      if (json_reader.token.kind == AZ_JSON_TOKEN_BEGIN_OBJECT && sample_components_ptr != NULL
+      if (json_reader->token.kind == AZ_JSON_TOKEN_BEGIN_OBJECT && sample_components_ptr != NULL
           && (is_component_in_model(
                   az_span_init((uint8_t*)scratch_buf, len), sample_components_ptr, sample_components_num, &index)
               == AZ_OK))
       {
         if (visit_component_properties(
                 *sample_components_ptr[index],
-                &json_reader,
+                json_reader,
                 version,
                 scratch_buf,
                 scratch_buf_len,
@@ -428,20 +432,20 @@ az_result pnp_helper_process_twin_data(
         property_callback(
             AZ_SPAN_NULL,
             az_span_init((uint8_t*)scratch_buf, (int32_t)len),
-            &(json_reader.token),
+            &(json_reader->token),
             version,
             context_ptr);
       }
     }
-    else if (json_reader.token.kind == AZ_JSON_TOKEN_BEGIN_OBJECT)
+    else if (json_reader->token.kind == AZ_JSON_TOKEN_BEGIN_OBJECT)
     {
-      if (az_failed(az_json_reader_skip_children(&json_reader)))
+      if (az_failed(az_json_reader_skip_children(json_reader)))
       {
         printf("Failed to skip children of object\r\n");
         return AZ_ERROR_UNEXPECTED_CHAR;
       }
     }
-    else if (json_reader.token.kind == AZ_JSON_TOKEN_END_OBJECT)
+    else if (json_reader->token.kind == AZ_JSON_TOKEN_END_OBJECT)
     {
       break;
     }
