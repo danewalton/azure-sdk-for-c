@@ -53,8 +53,7 @@ az_result pnp_helper_get_telemetry_topic(
  * @param[out]
  */
 az_result pnp_helper_parse_command_name(
-    char* component_command,
-    int32_t component_command_size,
+    az_span component_command,
     az_span* component_name,
     az_span* pnp_command_name);
 
@@ -104,7 +103,7 @@ az_result pnp_helper_create_reported_property_with_status(
  */
 az_result pnp_helper_process_twin_data(
     az_json_reader json_reader,
-    int32_t is_partial,
+    bool is_partial,
     az_span** sample_components_ptr,
     int32_t sample_components_num,
     char* scratch_buf,

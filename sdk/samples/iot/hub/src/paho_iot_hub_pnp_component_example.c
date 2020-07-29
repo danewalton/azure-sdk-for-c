@@ -67,7 +67,21 @@ static az_span boot_time_span;
 // is described in the coresponding DTMI. Should you choose to program your own PnP capable device,
 // the functionality would need to match the DTMI and you would need to update the below 'model_id'.
 // Please see the sample README for more information on this DTMI.
-static const az_span model_id = AZ_SPAN_LITERAL_FROM_STR("dtmi:com:example:Thermostat;1");
+static const az_span model_id = "dtmi:com:example:TemperatureController;1";
+static sample_pnp_thermostat_component sample_thermostat_1;
+static const az_span sample_thermostat_1_component = "thermostat1";
+static sample_pnp_thermostat_component sample_thermostat_2;
+static const az_span sample_thermostat_2_component = "thermostat2";
+static const az_span sample_device_info_component = "deviceInformation";
+static const az_span* sample_components[] = { sample_thermostat_1_component,
+                                              sample_thermostat_2_component,
+                                              sample_device_info_component };
+static const int32_t sample_components_num
+    = sizeof(sample_components) / sizeof(sample_components[0]);
+static bool sample_device_info_sent;
+static bool sample_device_serial_info_sent;
+static char scratch_buf[32];
+
 // ISO8601 Time Format
 static const char iso_spec_time_format[] = "%Y-%m-%dT%H:%M:%S%z";
 
@@ -94,7 +108,7 @@ static const az_span telemetry_name = AZ_SPAN_LITERAL_FROM_STR("temperature");
 static char telemetry_payload[32];
 
 // IoT Hub Commands Values
-static char commands_response_topic[128];
+static char command_response_topic[128];
 static const az_span report_command_name_span = AZ_SPAN_LITERAL_FROM_STR("getMaxMinReport");
 static const az_span report_max_temp_name_span = AZ_SPAN_LITERAL_FROM_STR("maxTemp");
 static const az_span report_min_temp_name_span = AZ_SPAN_LITERAL_FROM_STR("minTemp");
@@ -127,6 +141,7 @@ static double device_avg_temp = DEFAULT_START_TEMP_CELSIUS;
 //
 // Configuration and connection functions
 //
+static az_result components_init(void);
 static az_result read_configuration_and_init_client(void);
 static az_result read_configuration_entry(
     const char* env_name,
@@ -137,7 +152,6 @@ static az_result read_configuration_entry(
 static az_result create_mqtt_endpoint(char* destination, int32_t destination_size, az_span iot_hub);
 static int connect_device(void);
 static int subscribe(void);
-static void sleep_for_seconds(uint32_t seconds);
 
 //
 // Messaging functions
@@ -184,6 +198,9 @@ int main(void)
     return -1;
   }
   boot_time_span = az_span_init((uint8_t*)boot_time_str, (int32_t)len);
+
+  // Initialize PnP Components
+  components_init();
 
   // Read in the necessary environment variables and initialize the az_iot_hub_client
   if (az_failed(rc = read_configuration_and_init_client()))
@@ -251,8 +268,6 @@ int main(void)
 
     // Send a telemetry message
     send_telemetry_message();
-
-    sleep_for_seconds(DEVICE_DO_WORK_SLEEP_MS);
   }
 
   // Gracefully disconnect: send the disconnect packet and close the socket
@@ -272,13 +287,16 @@ int main(void)
   return 0;
 }
 
-static void sleep_for_seconds(uint32_t seconds)
+static az_result components_init()
 {
-#ifdef _WIN32
-  Sleep((DWORD)seconds * 1000);
-#else
-  sleep(seconds);
-#endif
+  az_result result;
+
+  AZ_RETURN_IF_FAILED(sample_pnp_thermostat_init(
+      &sample_thermostat_1, sample_thermostat_1_component, DEFAULT_START_TEMP_CELSIUS));
+  AZ_RETURN_IF_FAILED(sample_pnp_thermostat_init(
+      &sample_thermostat_2, sample_thermostat_2_component, DEFAULT_START_TEMP_CELSIUS));
+
+  return AZ_OK;
 }
 
 // Read OS environment variables using stdlib function
@@ -472,8 +490,8 @@ static int send_command_response(
               &client,
               request->request_id,
               status,
-              commands_response_topic,
-              sizeof(commands_response_topic),
+              command_response_topic,
+              sizeof(command_response_topic),
               NULL)))
   {
     printf("Unable to get twin document publish topic\n");
@@ -492,7 +510,7 @@ static int send_command_response(
   putchar('\n');
 
   // Send the commands response
-  if ((rc = mqtt_publish_message(commands_response_topic, response, 0)) == 0)
+  if ((rc = mqtt_publish_message(command_response_topic, response, 0)) == 0)
   {
     printf("Sent response\n");
   }
@@ -681,6 +699,37 @@ static void update_device_temp(double temp, bool* max_temp_changed)
   *max_temp_changed = ret;
 }
 
+void (*pnp_helper_property_callback)(
+    az_span component_name,
+    az_span property_name,
+    az_json_token* property_value,
+    int32_t version,
+    void* user_context_callback)
+{
+  if (az_span_ptr(component_name) == NULL || az_span_size(component_name) == 0)
+  {
+    printf("Error");
+  }
+  else if (
+      sample_pnp_thermostat_process_property_update(
+          &sample_thermostat_1, component_name, property_name, proeprty_value, version)
+      == AZ_OK)
+  {
+    printf("Updated property on thermostat 1\n");
+  }
+  else if (
+      sample_pnp_thermostat_process_property_update(
+          &sample_thermostat_2, component_name, property_name, proeprty_value, version)
+      == AZ_OK)
+  {
+    printf("Updated property on thermostat 2\n");
+  }
+  else
+  {
+    printf("There was an error updating a property\n");
+  }
+}
+
 // Switch on the type of twin message and handle accordingly | On desired prop, respond with max
 // temp reported prop.
 static void handle_twin_message(
@@ -699,12 +748,23 @@ static void handle_twin_message(
   int32_t version_num;
   az_span twin_payload_span
       = az_span_init((uint8_t*)message->payload, (int32_t)message->payloadlen);
+  az_json_reader json_reader;
+  result = az_json_reader_init(&json_reader, twin_payload_span, NULL);
   // Determine what type of incoming twin message this is. Print relevant data for the message.
   switch (twin_response->response_type)
   {
     // A response from a twin GET publish message with the twin document as a payload.
     case AZ_IOT_CLIENT_TWIN_RESPONSE_TYPE_GET:
       printf("A twin GET response was received\n");
+      pnp_helper_process_twin_data(
+          &json_reader,
+          false,
+          sample_components,
+          sample_components_num,
+          scratch_buf,
+          sizeof(scratch_buf),
+          pnp_helper_property_callback property_callback,
+          NULL);
       if (az_failed(
               result = parse_twin_desired_temperature_property(
                   twin_payload_span, true, &desired_temp, &version_num)))
@@ -757,47 +817,104 @@ static void handle_command_message(
     MQTTClient_message* message,
     az_iot_hub_client_method_request* command_request)
 {
-
-  if (az_span_is_content_equal(report_command_name_span, command_request->name))
+  az_span command_response_payload = AZ_SPAN_FROM_BUFFER(commands_response_payload);
+  az_span component_name;
+  az_span command_name;
+  if ((status = pnp_helper_parse_command_name(
+           command_request->name,
+           component_name,
+           command_name))
+      != AZ_OK)
   {
-    az_span command_response_span = AZ_SPAN_FROM_BUFFER(commands_response_payload);
-    az_span command_response_payload_span
-        = az_span_init((uint8_t*)message->payload, (int32_t)message->payloadlen);
-
-    // Invoke command
-    uint16_t return_code;
-    az_result response = invoke_getMaxMinReport(
-        command_response_payload_span, command_response_span, &command_response_span);
-    if (response != AZ_OK)
-    {
-      return_code = 400;
-    }
-    else
-    {
-      return_code = 200;
-    }
-
-    // Send command response with report as JSON payload
-    int rc;
-    if ((rc = send_command_response(command_request, return_code, command_response_span)) != 0)
-    {
-      printf("Unable to send %u response, status %d\n", return_code, rc);
-    }
+    printf("Failed to parse command name: error code = 0x%08x\r\n", status);
   }
-  else
+  else if (
+      (status = sample_pnp_thermostat_process_command(
+           &sample_thermostat_1,
+           component_name,
+           command_name,
+           command_response_topic,
+           command_response_payload,
+           &command_response_topic,
+           &command_response_payload))
+      == NX_AZURE_IOT_SUCCESS)
   {
-    // Unsupported command
     printf(
-        "Unsupported command received: %.*s.\n",
-        az_span_size(command_request->name),
-        az_span_ptr(command_request->name));
-
-    int rc;
-    if ((rc = send_command_response(command_request, 404, report_error_payload)) != 0)
-    {
-      printf("Unable to send %d response, status %d\n", 404, rc);
-    }
+        "Successfully executed command %.*s on thermostat 1\r\n",
+        az_span_size(command_name),
+        az_span_ptr(command_name));
   }
+  else if (
+      (status = sample_pnp_thermostat_process_command(
+           &sample_thermostat_2,
+           component_name,
+           command_name,
+           command_response_topic,
+           command_response_payload,
+           &command_response_topic,
+           &command_response_payload))
+      == NX_AZURE_IOT_SUCCESS)
+  {
+    printf(
+        "Successfully executed command %.*s on thermostat 2\r\n",
+        az_span_size(command_name),
+        az_span_ptr(command_name);
+  }
+  else if ((status = sample_pnp_temp_controller_process_command(
+                component_name,
+                command_name,
+                command_response_topic,
+                command_response_paylaod,
+                &command_response_topic,
+                &command_response_payload))
+      == NX_AZURE_IOT_SUCCESS)
+      {
+        printf(
+            "Successfully executed command %.*s on controller \r\n",
+            az_span_size(command_name),
+            az_span_ptr(command_name))
+  }
+
+//  if (az_span_is_content_equal(report_command_name_span, command_request->name))
+// {
+//   az_span command_response_payload = AZ_SPAN_FROM_BUFFER(commands_response_payload);
+//   az_span command_response_payload_span
+//       = az_span_init((uint8_t*)message->payload, (int32_t)message->payloadlen);
+//
+//   // Invoke command
+//   uint16_t return_code;
+//   az_result response = invoke_getMaxMinReport(
+//       command_response_payload_span, command_response_payload, &command_response_payload);
+//   if (response != AZ_OK)
+//   {
+//     return_code = 400;
+//   }
+//   else
+//   {
+//     return_code = 200;
+//   }
+//
+//   // Send command response with report as JSON payload
+//   int rc;
+//   if ((rc = send_command_response(command_request, return_code, command_response_payload)) != 0)
+//   {
+//     printf("Unable to send %u response, status %d\n", return_code, rc);
+//   }
+// }
+// else
+// {
+//   // Unsupported command
+//   printf(
+//       "Unsupported command received: %.*s.\n",
+//       az_span_size(command_request->name),
+//       az_span_ptr(command_request->name));
+//
+//   int rc;
+//   if ((rc = send_command_response(command_request, 404, report_error_payload)) != 0)
+//   {
+//     printf("Unable to send %d response, status %d\n", 404, rc);
+//   }
+// }
 }
 
 // Callback for incoming MQTT messages

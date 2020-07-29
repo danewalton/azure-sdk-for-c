@@ -288,24 +288,21 @@ az_result pnp_helper_get_telemetry_topic(
 }
 
 az_result pnp_helper_parse_command_name(
-    char* component_command,
-    int32_t component_command_size,
+    az_span component_command,
     az_span* component_name,
     az_span* pnp_command_name)
 {
-  az_span component_command_span
-      = az_span_init((uint8_t*)component_command, component_command_size);
-  int32_t index = az_span_find(component_command_span, command_separator);
+  int32_t index = az_span_find(component_command, command_separator);
   if (index > 0)
   {
-    *component_name = az_span_slice(component_command_span, 0, index - 1);
+    *component_name = az_span_slice(component_command, 0, index - 1);
     *pnp_command_name
-        = az_span_slice(component_command_span, index, az_span_size(component_command_span));
+        = az_span_slice(component_command, index, az_span_size(component_command));
   }
   else
   {
     *component_name = AZ_SPAN_NULL;
-    *pnp_command_name = component_command_span;
+    *pnp_command_name = component_command;
   }
   return AZ_OK;
 }
@@ -354,7 +351,7 @@ az_result pnp_helper_create_reported_property_with_status(
 
 az_result pnp_helper_process_twin_data(
     az_json_reader json_reader,
-    int32_t is_partial,
+    bool is_partial,
     az_span** sample_components_ptr,
     int32_t sample_components_num,
     char* scratch_buf,
