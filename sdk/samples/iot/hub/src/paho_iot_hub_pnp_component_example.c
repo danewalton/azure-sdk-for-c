@@ -44,6 +44,38 @@
 // This is usually not needed on Linux or Mac but needs to be set on Windows.
 #define ENV_DEVICE_X509_TRUST_PEM_FILE "AZ_IOT_DEVICE_X509_TRUST_PEM_FILE"
 
+// Logging with formatting
+#define LOG_ERROR(...) \
+  { \
+    (void)fprintf(stderr, "ERROR:\t\t%s:%s():%d: ", __FILE__, __func__, __LINE__); \
+    (void)fprintf(stderr, __VA_ARGS__); \
+    (void)fprintf(stderr, "\n"); \
+    fflush(stdout); \
+    fflush(stderr); \
+  }
+#define LOG_SUCCESS(...) \
+  { \
+    (void)printf("SUCCESS:\t"); \
+    (void)printf(__VA_ARGS__); \
+    (void)printf("\n"); \
+  }
+#define LOG(...) \
+  { \
+    (void)printf("\t\t"); \
+    (void)printf(__VA_ARGS__); \
+    (void)printf("\n"); \
+  }
+#define LOG_AZ_SPAN(span_description, span) \
+  { \
+    (void)printf("\t\t%s ", span_description); \
+    char* buffer = (char*)az_span_ptr(span); \
+    for (int32_t i = 0; i < az_span_size(span); i++) \
+    { \
+      putchar(*buffer++); \
+    } \
+    (void)printf("\n"); \
+  }
+
 #define TIMEOUT_WAIT_FOR_RECEIVE_MESSAGE_MS (8 * 1000)
 #define TIMEOUT_WAIT_FOR_COMPLETION_MS 1000
 #define TIMEOUT_MQTT_DISCONNECT_MS (10 * 1000)
@@ -104,21 +136,6 @@ static sample_pnp_mqtt_message publish_message;
 static const az_span reboot_command_name = AZ_SPAN_LITERAL_FROM_STR("reboot");
 static const az_span empty_json_payload = AZ_SPAN_LITERAL_FROM_STR("{}");
 
-// IoT Hub Twin Values
-// static const az_span desired_property_name = AZ_SPAN_LITERAL_FROM_STR("desired");
-// static const az_span desired_property_version_name = AZ_SPAN_LITERAL_FROM_STR("$version");
-// static const az_span desired_temp_property_name = AZ_SPAN_LITERAL_FROM_STR("targetTemperature");
-// static const az_span max_temp_reported_property_name
-//     = AZ_SPAN_LITERAL_FROM_STR("maxTempSinceLastReboot");
-
-// PnP Device Values
-// static double current_device_temp = DEFAULT_START_TEMP_CELSIUS;
-// static double device_temperature_avg_total = DEFAULT_START_TEMP_CELSIUS;
-// static uint32_t device_temperature_avg_count = 1;
-// static double device_max_temp = DEFAULT_START_TEMP_CELSIUS;
-// static double device_min_temp = DEFAULT_START_TEMP_CELSIUS;
-// static double device_avg_temp = DEFAULT_START_TEMP_CELSIUS;
-
 //
 // Configuration and connection functions
 //
@@ -142,21 +159,12 @@ static int on_received(char* topicName, int topicLen, MQTTClient_message* messag
 static void send_device_info(void);
 static int send_telemetry_message(void);
 static int send_twin_get_message(void);
-// static int send_reported_temperature_property(
-//     double temp_value,
-//     int32_t version,
-//     bool is_max_reported_prop);
 static void handle_twin_message(
     MQTTClient_message* message,
     az_iot_hub_client_twin_response* twin_response);
 static void handle_command_message(
     MQTTClient_message* message,
     az_iot_hub_client_method_request* command_request);
-// static az_result parse_twin_desired_temperature_property(
-//     az_span twin_payload_span,
-//     bool is_twin_get,
-//     double* parsed_value,
-//     int32_t* version_number);
 
 int main(void)
 {
@@ -170,7 +178,7 @@ int main(void)
   size_t len = strftime(boot_time_str, sizeof(boot_time_str), iso_spec_time_format, timeinfo);
   if (len == 0)
   {
-    printf("Insufficient buffer size for program start time.\n");
+    LOG_ERROR("Insufficient buffer size for program start time.\n");
     return -1;
   }
   boot_time_span = az_span_init((uint8_t*)boot_time_str, (int32_t)len);
@@ -178,7 +186,7 @@ int main(void)
   // Read in the necessary environment variables and initialize the az_iot_hub_client
   if (az_failed(rc = read_configuration_and_init_client()))
   {
-    printf("Failed to read configuration from environment variables, return code %d\n", rc);
+    LOG_ERROR("Failed to read configuration from environment variables, return code %d\n", rc);
     return rc;
   }
 
@@ -188,7 +196,7 @@ int main(void)
           rc = az_iot_hub_client_get_client_id(
               &client, mqtt_client_id, sizeof(mqtt_client_id), &client_id_length)))
   {
-    printf("Failed to get MQTT client id, return code %d\n", rc);
+    LOG_ERROR("Failed to get MQTT client id, return code %d\n", rc);
     return rc;
   }
 
@@ -197,7 +205,7 @@ int main(void)
            &mqtt_client, mqtt_endpoint, mqtt_client_id, MQTTCLIENT_PERSISTENCE_NONE, NULL))
       != MQTTCLIENT_SUCCESS)
   {
-    printf("Failed to create MQTT client, return code %d\n", rc);
+    LOG_ERROR("Failed to create MQTT client, return code %d\n", rc);
     return rc;
   }
 
@@ -259,12 +267,12 @@ int main(void)
   // Gracefully disconnect: send the disconnect packet and close the socket
   if ((rc = MQTTClient_disconnect(mqtt_client, TIMEOUT_MQTT_DISCONNECT_MS)) != MQTTCLIENT_SUCCESS)
   {
-    printf("Failed to disconnect MQTT client, return code %d\n", rc);
+    LOG_ERROR("Failed to disconnect MQTT client, return code %d\n", rc);
     return rc;
   }
   else
   {
-    printf("Disconnected.\n");
+    LOG_SUCCESS("Disconnected.\n");
   }
 
   // Clean up and release resources allocated by the mqtt client
@@ -309,7 +317,7 @@ static az_result read_configuration_entry(
   }
   else
   {
-    printf("(missing) Please set the %s environment variable.\n", env_name);
+    LOG_ERROR("(missing) Please set the %s environment variable.\n", env_name);
     return AZ_ERROR_ARG;
   }
 
@@ -324,7 +332,7 @@ static int mqtt_publish_message(char* topic, az_span payload, int qos)
            mqtt_client, topic, az_span_size(payload), az_span_ptr(payload), qos, 0, &token))
       != MQTTCLIENT_SUCCESS)
   {
-    printf("Unable to publish message, return code %d\n", rc);
+    LOG_ERROR("Unable to publish message, return code %d\n", rc);
     return rc;
   }
   if (qos > 0)
@@ -332,7 +340,7 @@ static int mqtt_publish_message(char* topic, az_span payload, int qos)
     if ((rc = MQTTClient_waitForCompletion(mqtt_client, token, TIMEOUT_WAIT_FOR_COMPLETION_MS))
         != MQTTCLIENT_SUCCESS)
     {
-      printf("Wait for message completion timed out, return code %d\n", rc);
+      LOG("Wait for message completion timed out, return code %d\n", rc);
       return rc;
     }
   }
@@ -414,7 +422,7 @@ static void sample_property_callback(
   (void)user_context_callback;
   if (az_span_ptr(component_name) == NULL || az_span_size(component_name) == 0)
   {
-    printf(
+    LOG_ERROR(
         "Property=%.*s arrived for Control component itself.  This does not support\
                 writeable properties on it (all properties are on subcomponents)",
         az_span_size(property_name),
@@ -431,7 +439,7 @@ static void sample_property_callback(
           &publish_message)
       == AZ_OK)
   {
-    printf("Updated property on thermostat 1\n");
+    LOG_SUCCESS("Updated property on thermostat 1\n");
 
     // Send response to the updated property
     mqtt_publish_message(publish_message.topic, publish_message.out_payload_span, 0);
@@ -447,14 +455,14 @@ static void sample_property_callback(
           &publish_message)
       == AZ_OK)
   {
-    printf("Updated property on thermostat 2\n");
+    LOG_SUCCESS("Updated property on thermostat 2\n");
 
     // Send response to the updated property
     mqtt_publish_message(publish_message.topic, publish_message.out_payload_span, 0);
   }
   else
   {
-    printf("There was an error updating a property\n");
+    LOG_ERROR("There was an error updating a property\n");
   }
 }
 
@@ -468,7 +476,7 @@ static void handle_twin_message(
 
   if (message->payloadlen)
   {
-    printf("Payload:\n%.*s\n", message->payloadlen, (char*)message->payload);
+    LOG_SUCCESS("Payload:\n%.*s\n", message->payloadlen, (char*)message->payload);
   }
 
   az_span twin_payload_span
@@ -477,14 +485,14 @@ static void handle_twin_message(
   result = az_json_reader_init(&json_reader, twin_payload_span, NULL);
   if (result != AZ_OK)
   {
-    printf("Error initializing the json reader");
+    LOG_ERROR("Error initializing the json reader");
   }
   // Determine what type of incoming twin message this is. Print relevant data for the message.
   switch (twin_response->response_type)
   {
     // A response from a twin GET publish message with the twin document as a payload.
     case AZ_IOT_CLIENT_TWIN_RESPONSE_TYPE_GET:
-      printf("A twin GET response was received\n");
+      LOG_SUCCESS("A twin GET response was received\n");
       pnp_helper_process_twin_data(
           &json_reader,
           false,
@@ -497,7 +505,7 @@ static void handle_twin_message(
       break;
     // An update to the desired properties with the properties as a JSON payload.
     case AZ_IOT_CLIENT_TWIN_RESPONSE_TYPE_DESIRED_PROPERTIES:
-      printf("A twin desired properties message was received\n");
+      LOG_SUCCESS("A twin desired properties message was received\n");
       pnp_helper_process_twin_data(
           &json_reader,
           false,
@@ -512,7 +520,7 @@ static void handle_twin_message(
     // A response from a twin reported properties publish message. With a successfull update of
     // the reported properties, the payload will be empty and the status will be 204.
     case AZ_IOT_CLIENT_TWIN_RESPONSE_TYPE_REPORTED_PROPERTIES:
-      printf("A twin reported properties response message was received\n");
+      LOG_SUCCESS("A twin reported properties response message was received\n");
       break;
   }
 }
@@ -541,7 +549,7 @@ static az_result sample_pnp_temp_controller_process_command(
                 mqtt_message->topic_length,
                 NULL)))
     {
-      printf("Unable to get twin document publish topic\n");
+      LOG_ERROR("Unable to get twin document publish topic\n");
       return result;
     }
 
@@ -571,7 +579,7 @@ static void handle_command_message(
        = pnp_helper_parse_command_name(command_request->name, &component_name, &command_name))
       != AZ_OK)
   {
-    printf("Failed to parse command name: error code = 0x%08x\r\n", result);
+    LOG_ERROR("Failed to parse command name: error code = 0x%08x\r\n", result);
   }
   else if (
       (result = sample_pnp_thermostat_process_command(
@@ -584,13 +592,13 @@ static void handle_command_message(
            &publish_message))
       == AZ_OK)
   {
-    printf(
+    LOG_SUCCESS(
         "Successfully executed command %.*s on thermostat 1\r\n",
         az_span_size(command_name),
         az_span_ptr(command_name));
     if (mqtt_publish_message(publish_message.topic, publish_message.out_payload_span, 0) == 0)
     {
-      printf("Sent response\n");
+      LOG_SUCCESS("Sent response\n");
     }
   }
   else if (
@@ -604,13 +612,13 @@ static void handle_command_message(
            &publish_message))
       == AZ_OK)
   {
-    printf(
+    LOG_SUCCESS(
         "Successfully executed command %.*s on thermostat 2\r\n",
         az_span_size(command_name),
         az_span_ptr(command_name));
     if (mqtt_publish_message(publish_message.topic, publish_message.out_payload_span, 0) == 0)
     {
-      printf("Sent response\n");
+      LOG_SUCCESS("Sent response\n");
     }
   }
   else if (
@@ -618,13 +626,13 @@ static void handle_command_message(
            command_request, component_name, command_name, command_payload, &publish_message))
       == AZ_OK)
   {
-    printf(
+    LOG_SUCCESS(
         "Successfully executed command %.*s on controller \r\n",
         az_span_size(command_name),
         az_span_ptr(command_name));
     if (mqtt_publish_message(publish_message.topic, publish_message.out_payload_span, 0) == 0)
     {
-      printf("Sent response\n");
+      LOG_SUCCESS("Sent response\n");
     }
   }
 }
@@ -639,7 +647,7 @@ static int on_received(char* topicName, int topicLen, MQTTClient_message* messag
     topicLen = (int)strlen(topicName);
   }
 
-  printf("Topic: %s\n", topicName);
+  LOG_SUCCESS("Topic: %s\n", topicName);
 
   az_span topic_span = az_span_init((uint8_t*)topicName, topicLen);
 
@@ -650,7 +658,7 @@ static int on_received(char* topicName, int topicLen, MQTTClient_message* messag
   if (az_succeeded(
           az_iot_hub_client_twin_parse_received_topic(&client, topic_span, &twin_response)))
   {
-    printf("Twin Message Arrived: status %d\n", twin_response.status);
+    LOG_SUCCESS("Twin Message Arrived: status %d\n", twin_response.status);
 
     // Determine what kind of twin message it is and take appropriate actions
     handle_twin_message(message, &twin_response);
@@ -658,7 +666,7 @@ static int on_received(char* topicName, int topicLen, MQTTClient_message* messag
   else if (az_succeeded(az_iot_hub_client_methods_parse_received_topic(
                &client, az_span_init((uint8_t*)topicName, topicLen), &command_request)))
   {
-    printf("Command arrived\n");
+    LOG_SUCCESS("Command arrived\n");
 
     // Determine if the command is supported and take appropriate actions
     handle_command_message(message, &command_request);
@@ -686,11 +694,11 @@ static int connect_device(void)
           = az_iot_hub_client_get_user_name(&client, mqtt_username, sizeof(mqtt_username), NULL)))
 
   {
-    printf("Failed to get MQTT username, return code %d\n", rc);
+    LOG_ERROR("Failed to get MQTT username, return code %d\n", rc);
     return rc;
   }
 
-  printf("MQTT username: %s\r\n", mqtt_username);
+  LOG_SUCCESS("MQTT username: %s\r\n", mqtt_username);
 
   // This sample uses X509 authentication so the password field is set to NULL
   mqtt_connect_options.username = mqtt_username;
@@ -708,7 +716,7 @@ static int connect_device(void)
   // Connect to IoT Hub
   if ((rc = MQTTClient_connect(mqtt_client, &mqtt_connect_options)) != MQTTCLIENT_SUCCESS)
   {
-    printf("Failed to connect, return code %d\n", rc);
+    LOG_ERROR("Failed to connect, return code %d\n", rc);
     return rc;
   }
 
@@ -724,7 +732,7 @@ static int subscribe(void)
   if ((rc = MQTTClient_subscribe(mqtt_client, AZ_IOT_HUB_CLIENT_METHODS_SUBSCRIBE_TOPIC, 1))
       != MQTTCLIENT_SUCCESS)
   {
-    printf("Failed to subscribe to the commands subscribe topic filter, return code %d\n", rc);
+    LOG_ERROR("Failed to subscribe to the commands subscribe topic filter, return code %d\n", rc);
     return rc;
   }
 
@@ -733,7 +741,7 @@ static int subscribe(void)
   if ((rc = MQTTClient_subscribe(mqtt_client, AZ_IOT_HUB_CLIENT_TWIN_PATCH_SUBSCRIBE_TOPIC, 1))
       != MQTTCLIENT_SUCCESS)
   {
-    printf("Failed to subscribe to the twin patch topic filter, return code %d\n", rc);
+    LOG_ERROR("Failed to subscribe to the twin patch topic filter, return code %d\n", rc);
     return rc;
   }
 
@@ -743,7 +751,7 @@ static int subscribe(void)
   if ((rc = MQTTClient_subscribe(mqtt_client, AZ_IOT_HUB_CLIENT_TWIN_RESPONSE_SUBSCRIBE_TOPIC, 1))
       != MQTTCLIENT_SUCCESS)
   {
-    printf("Failed to subscribe to twin response topic filter, return code %d\n", rc);
+    LOG_ERROR("Failed to subscribe to twin response topic filter, return code %d\n", rc);
     return rc;
   }
 
@@ -759,11 +767,11 @@ static int send_twin_get_message(void)
           rc = az_iot_hub_client_twin_document_get_publish_topic(
               &client, request_id_span, publish_message.topic, publish_message.topic_length, NULL)))
   {
-    printf("Could not get twin get publish topic, az_result %d\n", rc);
+    LOG_ERROR("Could not get twin get publish topic, az_result %d\n", rc);
     return rc;
   }
 
-  printf("Sending twin get request\n");
+  LOG_SUCCESS("Sending twin get request\n");
   rc = mqtt_publish_message(publish_message.topic, AZ_SPAN_NULL, 0);
 
   return rc;
@@ -777,7 +785,7 @@ static int send_telemetry_message(void)
   if (sample_pnp_thermostat_get_telemetry_message(&client, &sample_thermostat_1, &publish_message)
       != AZ_OK)
   {
-    printf("Error getting message and topic\n");
+    LOG_ERROR("Error getting message and topic\n");
     return -1;
   }
 
@@ -787,11 +795,11 @@ static int send_telemetry_message(void)
   if (sample_pnp_thermostat_get_telemetry_message(&client, &sample_thermostat_2, &publish_message)
       != AZ_OK)
   {
-    printf("Error getting message and topic\n");
+    LOG_ERROR("Error getting message and topic\n");
     return -1;
   }
 
-  printf("Sending Telemetry Message for thermostat 2\n");
+  LOG_SUCCESS("Sending Telemetry Message for thermostat 2\n");
   rc = mqtt_publish_message(publish_message.topic, publish_message.out_payload_span, 0);
 
   // New line to separate messages on the console
