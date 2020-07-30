@@ -15,6 +15,8 @@ extern "C" {
 #include <azure/core/az_span.h>
 #include <azure/iot/az_iot_hub_client.h>
 
+#include "sample_pnp_component_mqtt.h"
+
 typedef struct sample_pnp_thermostat_component_tag
 {
   az_span component_name;
@@ -36,7 +38,8 @@ az_result sample_pnp_thermostat_process_property_update(
     az_span component_name,
     az_span property_name,
     az_json_token* property_value,
-    int32_t version);
+    int32_t version,
+    sample_pnp_mqtt_message* mqtt_message);
 
 az_result sample_pnp_thermostat_process_command(
     az_iot_hub_client* client,
@@ -45,11 +48,7 @@ az_result sample_pnp_thermostat_process_command(
     az_span component_name,
     az_span command_name,
     az_span command_payload,
-    char* response_topic,
-    size_t response_topic_length,
-    size_t* out_response_topic_length,
-    az_span response_payload_span,
-    az_span* out_response_payload_span);
+    sample_pnp_mqtt_message* mqtt_message);
 
 #ifdef __cplusplus
 }

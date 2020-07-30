@@ -21,8 +21,9 @@
 #include <azure/iot/az_iot_hub_client.h>
 
 #include "pnp_helper.h"
-#include "sample_pnp_thermostat_component.h"
+#include "sample_pnp_component_mqtt.h"
 #include "sample_pnp_device_info_component.h"
+#include "sample_pnp_thermostat_component.h"
 
 #ifdef _MSC_VER
 // "'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead."
@@ -74,8 +75,6 @@ static const az_span* sample_components[] = { &sample_thermostat_1_component,
                                               &sample_device_info_component };
 static const int32_t sample_components_num
     = sizeof(sample_components) / sizeof(sample_components[0]);
-//static bool sample_device_info_sent;
-//static bool sample_device_serial_info_sent;
 static char scratch_buf[32];
 
 // ISO8601 Time Format
@@ -98,26 +97,24 @@ static char mqtt_endpoint[128];
 static az_span mqtt_url_prefix = AZ_SPAN_LITERAL_FROM_STR("ssl://");
 static az_span mqtt_url_suffix = AZ_SPAN_LITERAL_FROM_STR(":8883");
 
+// Reuse topic and payload buffers since API's are synchronous
+static char publish_topic[128];
+static char publish_payload[256];
+static sample_pnp_mqtt_message publish_message;
+
 // IoT Hub Telemetry Values
-char telemetry_topic[128];
 static const az_span telemetry_name = AZ_SPAN_LITERAL_FROM_STR("temperature");
-static char telemetry_payload[32];
 
 // IoT Hub Command
-static char command_response_topic[128];
-static char commands_response_payload[256];
 static const az_span reboot_command_name = AZ_SPAN_LITERAL_FROM_STR("reboot");
 static const az_span empty_json_payload = AZ_SPAN_LITERAL_FROM_STR("{}");
 
 // IoT Hub Twin Values
-static char twin_get_topic[128];
-static char reported_property_topic[128];
 static const az_span desired_property_name = AZ_SPAN_LITERAL_FROM_STR("desired");
 static const az_span desired_property_version_name = AZ_SPAN_LITERAL_FROM_STR("$version");
 static const az_span desired_temp_property_name = AZ_SPAN_LITERAL_FROM_STR("targetTemperature");
 static const az_span max_temp_reported_property_name
     = AZ_SPAN_LITERAL_FROM_STR("maxTempSinceLastReboot");
-static char reported_property_payload[128];
 
 // PnP Device Values
 static double current_device_temp = DEFAULT_START_TEMP_CELSIUS;
@@ -213,6 +210,13 @@ int main(void)
     return rc;
   }
 
+  // Setup MQTT Message Struct
+  publish_message.topic = publish_topic;
+  publish_message.topic_length = sizeof(publish_topic);
+  publish_message.out_topic_length = 0;
+  publish_message.payload_span = AZ_SPAN_FROM_BUFFER(publish_payload);
+  publish_message.out_payload_span = publish_message.payload_span;
+
   // Connect to IoT Hub
   if ((rc = connect_device()) != 0)
   {
@@ -227,7 +231,7 @@ int main(void)
 
   char* incoming_message_topic;
   int incoming_message_topic_len;
-  MQTTClient_message* message;
+  MQTTClient_message* paho_message;
 
   // Send device info once on start up
   send_device_info();
@@ -243,14 +247,14 @@ int main(void)
             mqtt_client,
             &incoming_message_topic,
             &incoming_message_topic_len,
-            &message,
+            &paho_message,
             TIMEOUT_WAIT_FOR_RECEIVE_MESSAGE_MS)
             == MQTTCLIENT_SUCCESS
         && incoming_message_topic != NULL)
     {
-      on_received(incoming_message_topic, incoming_message_topic_len, message);
+      on_received(incoming_message_topic, incoming_message_topic_len, paho_message);
 
-      MQTTClient_freeMessage(&message);
+      MQTTClient_freeMessage(&paho_message);
       MQTTClient_free(incoming_message_topic);
     }
 
@@ -400,19 +404,10 @@ static az_result read_configuration_and_init_client(void)
 static void send_device_info(void)
 {
   // Get the device info in a JSON payload and the topic to which to send it
-  az_span device_info_payload
-      = az_span_init((uint8_t*)reported_property_payload, sizeof(reported_property_payload));
-  sample_pnp_device_info_get_report_data(
-      &client,
-      get_request_id(),
-      device_info_payload,
-      &device_info_payload,
-      reported_property_topic,
-      sizeof(reported_property_topic),
-      NULL);
+  sample_pnp_device_info_get_report_data(&client, get_request_id(), &publish_message);
 
   // Send the MQTT message to the endpoint
-  mqtt_publish_message(reported_property_topic, device_info_payload, 0);
+  mqtt_publish_message(publish_message.topic, publish_message.out_payload_span, 0);
 }
 
 // Send the twin reported property to the service
@@ -430,8 +425,8 @@ static int send_reported_temperature_property(
           rc = az_iot_hub_client_twin_patch_get_publish_topic(
               &client,
               request_id_span,
-              reported_property_topic,
-              sizeof(reported_property_topic),
+              publish_message.topic,
+              publish_message.topic_length,
               NULL)))
   {
     printf("Unable to get twin document publish topic, return code %d\n", rc);
@@ -443,18 +438,16 @@ static int send_reported_temperature_property(
   AZ_RETURN_IF_FAILED(
       az_span_dtoa(temp_value_span, temp_value, DOUBLE_DECIMAL_PLACE_DIGITS, &temp_value_span));
 
-  az_span reported_property_payload_span
-      = az_span_init((uint8_t*)reported_property_payload, sizeof(reported_property_payload));
   // Twin reported properties must be in JSON format. The payload is constructed here.
   if (is_max_reported_prop)
   {
     if (az_failed(
             rc = pnp_helper_create_reported_property(
-                reported_property_payload_span,
+                publish_message.payload_span,
                 AZ_SPAN_NULL,
                 max_temp_reported_property_name,
                 temp_value_span,
-                &reported_property_payload_span)))
+                &publish_message.out_payload_span)))
     {
       return rc;
     }
@@ -463,14 +456,14 @@ static int send_reported_temperature_property(
   {
     if (az_failed(
             rc = pnp_helper_create_reported_property_with_status(
-                reported_property_payload_span,
+                publish_message.payload_span,
                 AZ_SPAN_NULL,
                 desired_temp_property_name,
                 temp_value_span,
                 200,
                 version,
                 AZ_SPAN_FROM_STR("success"),
-                &reported_property_payload_span)))
+                &publish_message.out_payload_span)))
     {
       return rc;
     }
@@ -478,11 +471,11 @@ static int send_reported_temperature_property(
 
   printf(
       "Payload: %.*s\n",
-      az_span_size(reported_property_payload_span),
-      (char*)az_span_ptr(reported_property_payload_span));
+      az_span_size(publish_message.payload_span),
+      (char*)az_span_ptr(publish_message.payload_span));
 
   // Publish the reported property payload to IoT Hub
-  rc = mqtt_publish_message(reported_property_topic, reported_property_payload_span, 0);
+  rc = mqtt_publish_message(publish_message.topic, publish_message.out_payload_span, 0);
 
   return rc;
 }
@@ -607,18 +600,32 @@ static void sample_property_callback(
   (void)user_context_callback;
   if (az_span_ptr(component_name) == NULL || az_span_size(component_name) == 0)
   {
-    printf("Error");
+    printf(
+        "Property=%.*s arrived for Control component itself.  This does not support\
+                writeable properties on it (all properties are on subcomponents)",
+        az_span_size(property_name),
+        az_span_ptr(property_name));
   }
   else if (
       sample_pnp_thermostat_process_property_update(
-          &sample_thermostat_1, component_name, property_name, property_value, version)
+          &sample_thermostat_1,
+          component_name,
+          property_name,
+          property_value,
+          version,
+          &publish_message)
       == AZ_OK)
   {
     printf("Updated property on thermostat 1\n");
   }
   else if (
       sample_pnp_thermostat_process_property_update(
-          &sample_thermostat_2, component_name, property_name, property_value, version)
+          &sample_thermostat_2,
+          component_name,
+          property_name,
+          property_value,
+          version,
+          &publish_message)
       == AZ_OK)
   {
     printf("Updated property on thermostat 2\n");
@@ -716,11 +723,7 @@ static az_result sample_pnp_temp_controller_process_command(
     az_span component_name,
     az_span command_name,
     az_span command_payload,
-    char* response_topic,
-    size_t response_topic_length,
-    size_t* out_response_topic_length,
-    az_span response_payload_span,
-    az_span* out_response_payload_span)
+    sample_pnp_mqtt_message* mqtt_message)
 {
   az_result result;
 
@@ -735,15 +738,15 @@ static az_result sample_pnp_temp_controller_process_command(
                 &client,
                 command_request->request_id,
                 200,
-                response_topic,
-                response_topic_length,
-                out_response_topic_length)))
+                mqtt_message->topic,
+                mqtt_message->topic_length,
+                NULL)))
     {
       printf("Unable to get twin document publish topic\n");
       return result;
     }
-    (void)response_payload_span;
-    *out_response_payload_span = empty_json_payload;
+
+    mqtt_message->out_payload_span = empty_json_payload;
   }
   else
   {
@@ -763,7 +766,6 @@ static void handle_command_message(
   (void)message;
 
   az_span command_payload = az_span_init(message->payload, message->payloadlen);
-  az_span command_response_payload = AZ_SPAN_FROM_BUFFER(commands_response_payload);
   az_span component_name;
   az_span command_name;
   if ((result
@@ -780,18 +782,14 @@ static void handle_command_message(
            component_name,
            command_name,
            command_payload,
-           command_response_topic,
-           sizeof(command_response_topic),
-           NULL,
-           command_response_payload,
-           &command_response_payload))
+           &publish_message))
       == AZ_OK)
   {
     printf(
         "Successfully executed command %.*s on thermostat 1\r\n",
         az_span_size(command_name),
         az_span_ptr(command_name));
-    if (mqtt_publish_message(command_response_topic, command_response_payload, 0) == 0)
+    if (mqtt_publish_message(publish_message.topic, publish_message.out_payload_span, 0) == 0)
     {
       printf("Sent response\n");
     }
@@ -804,18 +802,14 @@ static void handle_command_message(
            component_name,
            command_name,
            command_payload,
-           command_response_topic,
-           sizeof(command_response_topic),
-           NULL,
-           command_response_payload,
-           &command_response_payload))
+           &publish_message))
       == AZ_OK)
   {
     printf(
         "Successfully executed command %.*s on thermostat 2\r\n",
         az_span_size(command_name),
         az_span_ptr(command_name));
-    if (mqtt_publish_message(command_response_topic, command_response_payload, 0) == 0)
+    if (mqtt_publish_message(publish_message.topic, publish_message.out_payload_span, 0) == 0)
     {
       printf("Sent response\n");
     }
@@ -826,18 +820,14 @@ static void handle_command_message(
            component_name,
            command_name,
            command_payload,
-           command_response_topic,
-           sizeof(command_response_topic),
-           NULL,
-           command_response_payload,
-           &command_response_payload))
+           &publish_message))
       == AZ_OK)
   {
     printf(
         "Successfully executed command %.*s on controller \r\n",
         az_span_size(command_name),
         az_span_ptr(command_name));
-    if (mqtt_publish_message(command_response_topic, command_response_payload, 0) == 0)
+    if (mqtt_publish_message(publish_message.topic, publish_message.out_payload_span, 0) == 0)
     {
       printf("Sent response\n");
     }
@@ -972,23 +962,27 @@ static int send_twin_get_message(void)
   az_span request_id_span = get_request_id();
   if (az_failed(
           rc = az_iot_hub_client_twin_document_get_publish_topic(
-              &client, request_id_span, twin_get_topic, sizeof(twin_get_topic), NULL)))
+              &client,
+              request_id_span,
+              publish_message.topic,
+              publish_message.topic_length,
+              NULL)))
   {
     printf("Could not get twin get publish topic, az_result %d\n", rc);
     return rc;
   }
 
   printf("Sending twin get request\n");
-  rc = mqtt_publish_message(twin_get_topic, AZ_SPAN_NULL, 0);
+  rc = mqtt_publish_message(publish_message.topic, AZ_SPAN_NULL, 0);
 
   return rc;
 }
 
-static az_result build_telemetry_message(az_span* out_payload)
+static az_result build_telemetry_message(az_span payload, az_span* out_payload)
 {
   az_json_writer json_builder;
   AZ_RETURN_IF_FAILED(
-      az_json_writer_init(&json_builder, AZ_SPAN_FROM_BUFFER(telemetry_payload), NULL));
+      az_json_writer_init(&json_builder, payload, NULL));
   AZ_RETURN_IF_FAILED(az_json_writer_append_begin_object(&json_builder));
   AZ_RETURN_IF_FAILED(az_json_writer_append_property_name(&json_builder, telemetry_name));
   AZ_RETURN_IF_FAILED(az_json_writer_append_double(
@@ -1006,20 +1000,19 @@ static int send_telemetry_message(void)
 
   if (az_failed(
           rc = az_iot_hub_client_telemetry_get_publish_topic(
-              &client, NULL, telemetry_topic, sizeof(telemetry_topic), NULL)))
+              &client, NULL, publish_message.topic, publish_message.topic_length, NULL)))
   {
     return rc;
   }
 
-  az_span telemetry_payload_span;
-  if (az_failed(rc = build_telemetry_message(&telemetry_payload_span)))
+  if (az_failed(rc = build_telemetry_message(publish_message.payload_span, &publish_message.out_payload_span)))
   {
     printf("Could not build telemetry payload, az_result %d\n", rc);
     return rc;
   }
 
   printf("Sending Telemetry Message\n");
-  rc = mqtt_publish_message(telemetry_topic, telemetry_payload_span, 0);
+  rc = mqtt_publish_message(publish_message.topic, publish_message.out_payload_span, 0);
 
   // New line to separate messages on the console
   putchar('\n');
@@ -1036,4 +1029,3 @@ static az_span get_request_id(void)
   (void)result;
   return out_span;
 }
-

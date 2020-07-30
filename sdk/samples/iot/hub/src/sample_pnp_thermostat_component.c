@@ -24,6 +24,9 @@ static const az_span report_error_payload = AZ_SPAN_LITERAL_FROM_STR("{}");
 static char end_time_buffer[32];
 static char incoming_since_value[32];
 
+// Twin Values
+static const az_span desired_temp_property_name = AZ_SPAN_LITERAL_FROM_STR("targetTemperature");
+
 // ISO8601 Time Format
 static const char iso_spec_time_format[] = "%Y-%m-%dT%H:%M:%S%z";
 
@@ -126,12 +129,30 @@ az_result sample_pnp_thermostat_process_property_update(
     az_span component_name,
     az_span property_name,
     az_json_token* property_value,
-    int32_t version)
+    int32_t version,
+    sample_pnp_mqtt_message* mqtt_message)
 {
+  if(!az_span_is_content_equal(handle->component_name, component_name))
+  {
+    return AZ_ERROR_ITEM_NOT_FOUND;
+  }
 
-  (void)handle;
-  (void)component_name;
-  (void)property_name;
+  if (!az_span_is_content_equal(desired_temp_property_name, property_name))
+  {
+    printf(
+        "PnP property=%.*s is not supported on thermostat component\r\n",
+        az_span_size(property_name),
+        az_span_ptr(property_name));
+  }
+
+  double parsed_value = 0;
+  if (az_failed(az_json_token_get_double(property_value, &parsed_value)))
+  {
+    // status_code = 401;
+    // description = temp_response_description_failed;
+  }
+
+  (void)mqtt_message;
   (void)property_value;
   (void)version;
 
@@ -145,11 +166,7 @@ az_result sample_pnp_thermostat_process_command(
     az_span component_name,
     az_span command_name,
     az_span command_payload,
-    char* response_topic,
-    size_t response_topic_length,
-    size_t* out_response_topic_length,
-    az_span response_payload_span,
-    az_span* out_response_payload_span)
+    sample_pnp_mqtt_message* mqtt_message)
 {
   az_result result;
 
@@ -159,7 +176,10 @@ az_result sample_pnp_thermostat_process_command(
     // Invoke command
     uint16_t return_code;
     az_result response = invoke_getMaxMinReport(
-        handle, command_payload, response_payload_span, out_response_payload_span);
+        handle,
+        command_payload,
+        mqtt_message->payload_span,
+        &mqtt_message->payload_span);
     if (response != AZ_OK)
     {
       return_code = 400;
@@ -174,9 +194,9 @@ az_result sample_pnp_thermostat_process_command(
                 client,
                 command_request->request_id,
                 return_code,
-                response_topic,
-                response_topic_length,
-                out_response_topic_length)))
+                mqtt_message->topic,
+                mqtt_message->topic_length,
+                mqtt_message->out_topic_length)))
     {
       printf("Unable to get twin document publish topic\n");
       return result;
@@ -195,15 +215,15 @@ az_result sample_pnp_thermostat_process_command(
                 client,
                 command_request->request_id,
                 404,
-                response_topic,
-                response_topic_length,
-                out_response_topic_length)))
+                mqtt_message->topic,
+                mqtt_message->topic_length,
+                mqtt_message->out_topic_length)))
     {
       printf("Unable to get twin document publish topic\n");
       return result;
     }
 
-    *out_response_payload_span = report_error_payload;
+    mqtt_message->out_payload_span = report_error_payload;
 
   }
 

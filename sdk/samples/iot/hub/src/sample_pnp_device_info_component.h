@@ -8,17 +8,11 @@
 /**
  * @brief Get the payload to send for device info
  *
- * @param payload_span The span into which the payload will be deposited.
- * @param out_payload_span The output span which the span properties will be deposited.
- * @param topic The `char` pointer to place the topic to which to send the message.
- * @param topic_len The size of the buffer pointed to by `topic`.
- * @param out_topic_len The optional output topic length.
+ * @param client The `az_iot_hub_client` pointer to the hub client.
+ * @param request_id The request id to use for the message.
+ * @param mqtt_message The `sample_pnp_mqtt_message` pointer to the struct to be populated.
  */
 az_result sample_pnp_device_info_get_report_data(
     az_iot_hub_client* client,
     az_span request_id,
-    az_span payload_span,
-    az_span* out_payload_span,
-    char* topic,
-    size_t topic_len,
-    size_t* out_topic_len);
+    sample_pnp_mqtt_message* mqtt_message);

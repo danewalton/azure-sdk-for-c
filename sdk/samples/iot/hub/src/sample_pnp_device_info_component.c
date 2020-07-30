@@ -6,6 +6,7 @@
 #include <azure/core/az_span.h>
 #include <azure/iot/az_iot_hub_client.h>
 
+#include "sample_pnp_component_mqtt.h"
 #include "sample_pnp_device_info_component.h"
 
 #define DOUBLE_DECIMAL_PLACE_DIGITS 2
@@ -33,14 +34,10 @@ static const double sample_pnp_device_info_total_memory_property_value = 128;
 az_result sample_pnp_device_info_get_report_data(
     az_iot_hub_client* client,
     az_span request_id,
-    az_span payload_span,
-    az_span* out_payload_span,
-    char* topic,
-    size_t topic_len,
-    size_t* out_topic_len)
+    sample_pnp_mqtt_message* mqtt_message)
 {
   az_json_writer json_writer;
-  AZ_RETURN_IF_FAILED(az_json_writer_init(&json_writer, payload_span, NULL));
+  AZ_RETURN_IF_FAILED(az_json_writer_init(&json_writer, mqtt_message->payload_span, NULL));
 
   AZ_RETURN_IF_FAILED(az_json_writer_append_property_name(
       &json_writer, sample_pnp_device_info_manufacturer_property_name));
@@ -79,10 +76,14 @@ az_result sample_pnp_device_info_get_report_data(
       sample_pnp_device_info_total_memory_property_value,
       DOUBLE_DECIMAL_PLACE_DIGITS));
 
-  *out_payload_span = az_json_writer_get_json(&json_writer);
+  mqtt_message->out_payload_span = az_json_writer_get_json(&json_writer);
 
   AZ_RETURN_IF_FAILED(az_iot_hub_client_twin_patch_get_publish_topic(
-      client, request_id, topic, topic_len, out_topic_len));
+      client,
+      request_id,
+      mqtt_message->topic,
+      mqtt_message->topic_length,
+      mqtt_message->out_topic_length));
 
   return AZ_OK;
 }
