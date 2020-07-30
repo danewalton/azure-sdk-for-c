@@ -33,7 +33,13 @@ az_result sample_pnp_thermostat_init(
     az_span component_name,
     double initial_temp);
 
+az_result sample_pnp_thermostat_get_telemetry_message(
+    az_iot_hub_client* client,
+    sample_pnp_thermostat_component* handle,
+    sample_pnp_mqtt_message* mqtt_message);
+
 az_result sample_pnp_thermostat_process_property_update(
+    az_iot_hub_client* client,
     sample_pnp_thermostat_component* handle,
     az_span component_name,
     az_span property_name,

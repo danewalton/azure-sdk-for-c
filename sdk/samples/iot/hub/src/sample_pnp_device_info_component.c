@@ -33,7 +33,6 @@ static const double sample_pnp_device_info_total_memory_property_value = 128;
 
 az_result sample_pnp_device_info_get_report_data(
     az_iot_hub_client* client,
-    az_span request_id,
     sample_pnp_mqtt_message* mqtt_message)
 {
   az_json_writer json_writer;
@@ -80,7 +79,7 @@ az_result sample_pnp_device_info_get_report_data(
 
   AZ_RETURN_IF_FAILED(az_iot_hub_client_twin_patch_get_publish_topic(
       client,
-      request_id,
+      get_request_id(),
       mqtt_message->topic,
       mqtt_message->topic_length,
       mqtt_message->out_topic_length));

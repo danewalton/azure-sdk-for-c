@@ -23,6 +23,8 @@ typedef void (*pnp_helper_property_callback)(
     int32_t version,
     void* user_context_callback);
 
+typedef az_result (*pnp_append_property_callback)(az_json_writer* json_writer, void* context);
+
 /**
  * @brief Gets the MQTT topic that must be used for device to cloud telemetry messages.
  * @remark Telemetry MQTT Publish messages must have QoS At least once (1).
@@ -73,7 +75,8 @@ az_result pnp_helper_create_reported_property(
     az_span json_buffer,
     az_span component_name,
     az_span property_name,
-    az_span property_json_value,
+    pnp_append_property_callback append_callback,
+    void* context,
     az_span* out_span);
 
 /**
@@ -92,7 +95,8 @@ az_result pnp_helper_create_reported_property_with_status(
     az_span json_buffer,
     az_span component_name,
     az_span property_name,
-    az_span property_json_value,
+    pnp_append_property_callback append_callback,
+    void* context,
     int32_t ack_value,
     int32_t ack_version,
     az_span ack_description,

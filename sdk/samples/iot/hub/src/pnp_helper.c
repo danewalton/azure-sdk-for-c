@@ -25,11 +25,6 @@ static const az_span command_separator = AZ_SPAN_LITERAL_FROM_STR("*");
 static const az_span sample_iot_hub_twin_desired_version = AZ_SPAN_LITERAL_FROM_STR("$version");
 static const az_span sample_iot_hub_twin_desired = AZ_SPAN_LITERAL_FROM_STR("desired");
 
-static void strip_quotes_from_span(az_span input_span, az_span* out_span)
-{
-  *out_span = az_span_slice(input_span, 1, az_span_size(input_span) - 1);
-}
-
 static int32_t visit_component_properties(
     az_span component_name,
     az_json_reader* json_reader,
@@ -169,7 +164,8 @@ static az_result is_component_in_model(
 static az_result build_reported_property_with_status(
     az_json_writer* json_writer,
     az_span property_name,
-    az_span property_val,
+    pnp_append_property_callback append_callback,
+    void* context,
     int32_t ack_code_value,
     int32_t ack_version_value,
     az_span ack_description_value)
@@ -179,21 +175,7 @@ static az_result build_reported_property_with_status(
   AZ_RETURN_IF_FAILED(az_json_writer_append_begin_object(json_writer));
   AZ_RETURN_IF_FAILED(
       az_json_writer_append_property_name(json_writer, desired_temp_response_value_name));
-
-  if (*(char*)az_span_ptr(property_val) == '"')
-  {
-    az_span stripped_val;
-    strip_quotes_from_span(property_val, &stripped_val);
-    AZ_RETURN_IF_FAILED(az_json_writer_append_string(json_writer, stripped_val));
-  }
-  else
-  {
-    double value_as_double;
-    AZ_RETURN_IF_FAILED(az_span_atod(property_val, &value_as_double));
-    AZ_RETURN_IF_FAILED(
-        az_json_writer_append_double(json_writer, value_as_double, JSON_DOUBLE_DIGITS));
-  }
-
+  AZ_RETURN_IF_FAILED(append_callback(json_writer, context));
   AZ_RETURN_IF_FAILED(az_json_writer_append_property_name(json_writer, desired_temp_ack_code_name));
   AZ_RETURN_IF_FAILED(az_json_writer_append_int32(json_writer, ack_code_value));
   AZ_RETURN_IF_FAILED(
@@ -217,7 +199,8 @@ static az_result build_reported_property(
     az_json_writer* json_writer,
     az_span component,
     az_span name,
-    az_span value,
+    pnp_append_property_callback append_callback,
+    void* context,
     az_span* out_span)
 {
   bool has_component = az_span_ptr(component) != NULL;
@@ -235,22 +218,9 @@ static az_result build_reported_property(
   }
 
   AZ_RETURN_IF_FAILED(az_json_writer_append_property_name(json_writer, name));
+  AZ_RETURN_IF_FAILED(append_callback(json_writer, context));
 
-  if (*(char*)az_span_ptr(value) == '"')
-  {
-    az_span stripped_val;
-    strip_quotes_from_span(value, &stripped_val);
-    AZ_RETURN_IF_FAILED(az_json_writer_append_string(json_writer, stripped_val));
-  }
-  else
-  {
-    double value_as_double;
-    AZ_RETURN_IF_FAILED(az_span_atod(value, &value_as_double));
-    AZ_RETURN_IF_FAILED(
-        az_json_writer_append_double(json_writer, value_as_double, JSON_DOUBLE_DIGITS));
-  }
-
-  if(has_component)
+  if (has_component)
   {
     AZ_RETURN_IF_FAILED(az_json_writer_append_end_object(json_writer));
   }
@@ -311,7 +281,8 @@ az_result pnp_helper_create_reported_property(
     az_span json_buffer,
     az_span component_name,
     az_span property_name,
-    az_span property_json_value,
+    pnp_append_property_callback append_callback,
+    void* context,
     az_span* out_span)
 {
   az_result result;
@@ -319,7 +290,7 @@ az_result pnp_helper_create_reported_property(
   az_json_writer json_writer;
   result = az_json_writer_init(&json_writer, json_buffer, NULL);
   result = build_reported_property(
-      &json_writer, component_name, property_name, property_json_value, out_span);
+      &json_writer, component_name, property_name, append_callback, context, out_span);
 
   return result;
 }
@@ -328,7 +299,8 @@ az_result pnp_helper_create_reported_property_with_status(
     az_span json_buffer,
     az_span component_name,
     az_span property_name,
-    az_span property_json_value,
+    pnp_append_property_callback append_callback,
+    void* context,
     int32_t ack_value,
     int32_t ack_version,
     az_span ack_description,
@@ -345,7 +317,7 @@ az_result pnp_helper_create_reported_property_with_status(
   else
   {
     result = build_reported_property_with_status(
-        &json_writer, property_name, property_json_value, ack_value, ack_version, ack_description);
+        &json_writer, property_name, append_callback, context, ack_value, ack_version, ack_description);
   }
 
   *out_span = az_json_writer_get_json(&json_writer);
