@@ -22,6 +22,7 @@
 
 #include "pnp_helper.h"
 #include "sample_pnp_thermostat_component.h"
+#include "sample_pnp_device_info_component.h"
 
 #ifdef _MSC_VER
 // "'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead."
@@ -396,12 +397,22 @@ static az_result read_configuration_and_init_client(void)
   return AZ_OK;
 }
 
-
 static void send_device_info(void)
 {
-  //Get the device info in a JSON payload
+  // Get the device info in a JSON payload and the topic to which to send it
+  az_span device_info_payload
+      = az_span_init((uint8_t*)reported_property_payload, sizeof(reported_property_payload));
+  sample_pnp_device_info_get_report_data(
+      &client,
+      get_request_id(),
+      device_info_payload,
+      &device_info_payload,
+      reported_property_topic,
+      sizeof(reported_property_topic),
+      NULL);
 
-  //Send the MQTT message to the endpoint
+  // Send the MQTT message to the endpoint
+  mqtt_publish_message(reported_property_topic, device_info_payload, 0);
 }
 
 // Send the twin reported property to the service
