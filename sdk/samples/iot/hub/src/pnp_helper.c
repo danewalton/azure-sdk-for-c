@@ -227,7 +227,7 @@ static az_result build_reported_property(
 
   AZ_RETURN_IF_FAILED(az_json_writer_append_end_object(json_writer));
 
-  *out_span = az_json_writer_get_json(json_writer);
+  *out_span = az_json_writer_get_bytes_used_in_destination(json_writer);
 
   return AZ_OK;
 }
@@ -320,7 +320,7 @@ az_result pnp_helper_create_reported_property_with_status(
         &json_writer, property_name, append_callback, context, ack_value, ack_version, ack_description);
   }
 
-  *out_span = az_json_writer_get_json(&json_writer);
+  *out_span = az_json_writer_get_bytes_used_in_destination(&json_writer);
 
   return result;
 }

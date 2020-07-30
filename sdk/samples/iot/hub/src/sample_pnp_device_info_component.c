@@ -75,7 +75,7 @@ az_result sample_pnp_device_info_get_report_data(
       sample_pnp_device_info_total_memory_property_value,
       DOUBLE_DECIMAL_PLACE_DIGITS));
 
-  mqtt_message->out_payload_span = az_json_writer_get_json(&json_writer);
+  mqtt_message->out_payload_span = az_json_writer_get_bytes_used_in_destination(&json_writer);
 
   AZ_RETURN_IF_FAILED(az_iot_hub_client_twin_patch_get_publish_topic(
       client,

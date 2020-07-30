@@ -62,7 +62,7 @@ static az_result build_command_response_payload(
   AZ_RETURN_IF_FAILED(az_json_writer_append_string(json_builder, end_time_span));
   AZ_RETURN_IF_FAILED(az_json_writer_append_end_object(json_builder));
 
-  *response_payload = az_json_writer_get_json(json_builder);
+  *response_payload = az_json_writer_get_bytes_used_in_destination(json_builder);
 
   return AZ_OK;
 }
@@ -122,7 +122,7 @@ static az_result build_telemetry_message(
   AZ_RETURN_IF_FAILED(az_json_writer_append_double(
       &json_builder, handle->current_temperature, DOUBLE_DECIMAL_PLACE_DIGITS));
   AZ_RETURN_IF_FAILED(az_json_writer_append_end_object(&json_builder));
-  *out_payload = az_json_writer_get_json(&json_builder);
+  *out_payload = az_json_writer_get_bytes_used_in_destination(&json_builder);
 
   return AZ_OK;
 }
