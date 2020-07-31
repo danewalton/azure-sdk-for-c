@@ -163,41 +163,6 @@ static az_result is_component_in_model(
   return AZ_ERROR_UNEXPECTED_CHAR;
 }
 
-static az_result build_reported_property(
-    az_json_writer* json_writer,
-    az_span component,
-    az_span name,
-    pnp_append_property_callback append_callback,
-    void* context,
-    az_span* out_span)
-{
-  bool has_component = az_span_ptr(component) != NULL;
-
-  AZ_RETURN_IF_FAILED(az_json_writer_append_begin_object(json_writer));
-
-  if (has_component)
-  {
-    AZ_RETURN_IF_FAILED(az_json_writer_append_property_name(json_writer, component));
-    AZ_RETURN_IF_FAILED(az_json_writer_append_begin_object(json_writer));
-    AZ_RETURN_IF_FAILED(az_json_writer_append_property_name(json_writer, component_specifier_name));
-    AZ_RETURN_IF_FAILED(az_json_writer_append_string(json_writer, component_specifier_value));
-  }
-
-  AZ_RETURN_IF_FAILED(az_json_writer_append_property_name(json_writer, name));
-  AZ_RETURN_IF_FAILED(append_callback(json_writer, context));
-
-  if (has_component)
-  {
-    AZ_RETURN_IF_FAILED(az_json_writer_append_end_object(json_writer));
-  }
-
-  AZ_RETURN_IF_FAILED(az_json_writer_append_end_object(json_writer));
-
-  *out_span = az_json_writer_get_bytes_used_in_destination(json_writer);
-
-  return AZ_OK;
-}
-
 az_result pnp_helper_get_telemetry_topic(
     az_iot_hub_client const* client,
     az_iot_hub_client_properties* properties,
@@ -246,7 +211,8 @@ az_result pnp_helper_parse_command_name(
   if (index > 0)
   {
     *component_name = az_span_slice(component_command, 0, index);
-    *pnp_command_name = az_span_slice(component_command, index + 1, az_span_size(component_command));
+    *pnp_command_name
+        = az_span_slice(component_command, index + 1, az_span_size(component_command));
   }
   else
   {
@@ -268,8 +234,31 @@ az_result pnp_helper_create_reported_property(
 
   az_json_writer json_writer;
   result = az_json_writer_init(&json_writer, json_buffer, NULL);
-  result = build_reported_property(
-      &json_writer, component_name, property_name, append_callback, context, out_span);
+
+  bool has_component = az_span_ptr(component_name) != NULL;
+
+  AZ_RETURN_IF_FAILED(az_json_writer_append_begin_object(&json_writer));
+
+  if (has_component)
+  {
+    AZ_RETURN_IF_FAILED(az_json_writer_append_property_name(&json_writer, component_name));
+    AZ_RETURN_IF_FAILED(az_json_writer_append_begin_object(&json_writer));
+    AZ_RETURN_IF_FAILED(
+        az_json_writer_append_property_name(&json_writer, component_specifier_name));
+    AZ_RETURN_IF_FAILED(az_json_writer_append_string(&json_writer, component_specifier_value));
+  }
+
+  AZ_RETURN_IF_FAILED(az_json_writer_append_property_name(&json_writer, property_name));
+  AZ_RETURN_IF_FAILED(append_callback(&json_writer, context));
+
+  if (has_component)
+  {
+    AZ_RETURN_IF_FAILED(az_json_writer_append_end_object(&json_writer));
+  }
+
+  AZ_RETURN_IF_FAILED(az_json_writer_append_end_object(&json_writer));
+
+  *out_span = az_json_writer_get_bytes_used_in_destination(&json_writer);
 
   return result;
 }
@@ -406,7 +395,8 @@ az_result pnp_helper_process_twin_data(
                 scratch_buf,
                 scratch_buf_len,
                 property_callback,
-                context_ptr) != AZ_OK)
+                context_ptr)
+            != AZ_OK)
         {
           printf("Failed to visit component properties\r\n");
           return AZ_ERROR_UNEXPECTED_CHAR;
