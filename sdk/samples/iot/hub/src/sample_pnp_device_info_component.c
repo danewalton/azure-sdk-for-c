@@ -19,7 +19,7 @@ static const az_span sample_pnp_device_info_manufacturer_property_value = AZ_SPA
 static const az_span sample_pnp_device_info_model_property_name = AZ_SPAN_LITERAL_FROM_STR("model");
 static const az_span sample_pnp_device_info_model_property_value = AZ_SPAN_LITERAL_FROM_STR("pnp-sample-Model-123");
 static const az_span sample_pnp_device_info_os_name_property_name = AZ_SPAN_LITERAL_FROM_STR("osName");
-static const az_span sample_pnp_device_info_os_name_property_value = AZ_SPAN_LITERAL_FROM_STR("AzureRTOS");
+static const az_span sample_pnp_device_info_os_name_property_value = AZ_SPAN_LITERAL_FROM_STR("Contoso");
 static const az_span sample_pnp_device_info_processor_architecture_property_name = AZ_SPAN_LITERAL_FROM_STR("processorArchitecture");
 static const az_span sample_pnp_device_info_processor_architecture_property_value = AZ_SPAN_LITERAL_FROM_STR("Contoso-Arch-64bit");
 static const az_span sample_pnp_device_info_processor_manufacturer_property_name = AZ_SPAN_LITERAL_FROM_STR("processorManufacturer");
@@ -38,6 +38,7 @@ az_result sample_pnp_device_info_get_report_data(
   az_json_writer json_writer;
   AZ_RETURN_IF_FAILED(az_json_writer_init(&json_writer, mqtt_message->payload_span, NULL));
 
+  AZ_RETURN_IF_FAILED(az_json_writer_append_begin_object(&json_writer));
   AZ_RETURN_IF_FAILED(az_json_writer_append_property_name(
       &json_writer, sample_pnp_device_info_manufacturer_property_name));
   AZ_RETURN_IF_FAILED(az_json_writer_append_string(
@@ -74,6 +75,7 @@ az_result sample_pnp_device_info_get_report_data(
       &json_writer,
       sample_pnp_device_info_total_memory_property_value,
       DOUBLE_DECIMAL_PLACE_DIGITS));
+  AZ_RETURN_IF_FAILED(az_json_writer_append_end_object(&json_writer));
 
   mqtt_message->out_payload_span = az_json_writer_get_bytes_used_in_destination(&json_writer);
 

@@ -162,8 +162,8 @@ az_result sample_pnp_thermostat_get_telemetry_message(
 {
   az_result result;
   if (az_failed(
-          result = az_iot_hub_client_telemetry_get_publish_topic(
-              client, NULL, mqtt_message->topic, mqtt_message->topic_length, NULL)))
+          result = pnp_helper_get_telemetry_topic(
+              client, NULL, handle->component_name, mqtt_message->topic, mqtt_message->topic_length, NULL)))
   {
     return result;
   }
@@ -274,7 +274,7 @@ az_result sample_pnp_thermostat_process_command(
         handle,
         command_payload,
         mqtt_message->payload_span,
-        &mqtt_message->payload_span);
+        &mqtt_message->out_payload_span);
     if (response != AZ_OK)
     {
       return_code = 400;
@@ -299,27 +299,8 @@ az_result sample_pnp_thermostat_process_command(
   }
   else
   {
-    // Unsupported command
-    printf(
-        "Unsupported command received: %.*s.\n",
-        az_span_size(command_request->name),
-        az_span_ptr(command_request->name));
-
-            if (az_failed(
-            result = az_iot_hub_client_methods_response_get_publish_topic(
-                client,
-                command_request->request_id,
-                404,
-                mqtt_message->topic,
-                mqtt_message->topic_length,
-                mqtt_message->out_topic_length)))
-    {
-      printf("Unable to get twin document publish topic\n");
-      return result;
-    }
-
-    mqtt_message->out_payload_span = report_error_payload;
-
+    // Unsupported command or not this component's command
+    result = AZ_ERROR_ITEM_NOT_FOUND;
   }
 
   return result;

@@ -12,6 +12,8 @@
 
 #define JSON_DOUBLE_DIGITS 2
 
+static char pnp_properties_buffer[64];
+
 static const az_span component_telemetry_prop_span = AZ_SPAN_LITERAL_FROM_STR("$.sub");
 static const az_span desired_temp_response_value_name = AZ_SPAN_LITERAL_FROM_STR("value");
 static const az_span desired_temp_ack_code_name = AZ_SPAN_LITERAL_FROM_STR("ac");
@@ -207,14 +209,12 @@ static az_result build_reported_property(
 
   AZ_RETURN_IF_FAILED(az_json_writer_append_begin_object(json_writer));
 
-  if(has_component)
+  if (has_component)
   {
     AZ_RETURN_IF_FAILED(az_json_writer_append_property_name(json_writer, component));
     AZ_RETURN_IF_FAILED(az_json_writer_append_begin_object(json_writer));
-    AZ_RETURN_IF_FAILED(az_json_writer_append_property_name(
-        json_writer, component_specifier_name));
-    AZ_RETURN_IF_FAILED(
-        az_json_writer_append_string(json_writer, component_specifier_value));
+    AZ_RETURN_IF_FAILED(az_json_writer_append_property_name(json_writer, component_specifier_name));
+    AZ_RETURN_IF_FAILED(az_json_writer_append_string(json_writer, component_specifier_value));
   }
 
   AZ_RETURN_IF_FAILED(az_json_writer_append_property_name(json_writer, name));
@@ -242,8 +242,18 @@ az_result pnp_helper_get_telemetry_topic(
 {
   az_result result;
 
+  az_iot_hub_client_properties pnp_properties;
+
+  if (properties == NULL)
+  {
+    AZ_RETURN_IF_FAILED(az_iot_hub_client_properties_init(
+        &pnp_properties, AZ_SPAN_FROM_BUFFER(pnp_properties_buffer), 0));
+  }
+
   if ((result = az_iot_hub_client_properties_append(
-           properties, component_telemetry_prop_span, component_name))
+           properties != NULL ? properties : &pnp_properties,
+           component_telemetry_prop_span,
+           component_name))
       != AZ_OK)
   {
     return result;
@@ -251,7 +261,11 @@ az_result pnp_helper_get_telemetry_topic(
   else
   {
     result = az_iot_hub_client_telemetry_get_publish_topic(
-        client, properties, mqtt_topic, mqtt_topic_size, out_mqtt_topic_length);
+        client,
+        properties != NULL ? properties : &pnp_properties,
+        mqtt_topic,
+        mqtt_topic_size,
+        out_mqtt_topic_length);
   }
 
   return result;
@@ -265,9 +279,8 @@ az_result pnp_helper_parse_command_name(
   int32_t index = az_span_find(component_command, command_separator);
   if (index > 0)
   {
-    *component_name = az_span_slice(component_command, 0, index - 1);
-    *pnp_command_name
-        = az_span_slice(component_command, index, az_span_size(component_command));
+    *component_name = az_span_slice(component_command, 0, index);
+    *pnp_command_name = az_span_slice(component_command, index + 1, az_span_size(component_command));
   }
   else
   {
@@ -317,7 +330,13 @@ az_result pnp_helper_create_reported_property_with_status(
   else
   {
     result = build_reported_property_with_status(
-        &json_writer, property_name, append_callback, context, ack_value, ack_version, ack_description);
+        &json_writer,
+        property_name,
+        append_callback,
+        context,
+        ack_value,
+        ack_version,
+        ack_description);
   }
 
   *out_span = az_json_writer_get_bytes_used_in_destination(&json_writer);
@@ -340,14 +359,18 @@ az_result pnp_helper_process_twin_data(
   int32_t len;
   int32_t index;
 
-  if (!is_partial && sample_json_child_token_move(json_reader, sample_iot_hub_twin_desired))
+  AZ_RETURN_IF_FAILED(az_json_reader_next_token(json_reader));
+
+  if (!is_partial
+      && (sample_json_child_token_move(json_reader, sample_iot_hub_twin_desired) != AZ_OK))
   {
     printf("Failed to get desired property\r\n");
     return AZ_ERROR_UNEXPECTED_CHAR;
   }
 
   copy_json_reader = *json_reader;
-  if (sample_json_child_token_move(&copy_json_reader, sample_iot_hub_twin_desired_version)
+  if ((sample_json_child_token_move(&copy_json_reader, sample_iot_hub_twin_desired_version)
+       != AZ_OK)
       || az_failed(az_json_token_get_int32(&(copy_json_reader.token), (int32_t*)&version)))
   {
     printf("Failed to get version\r\n");
@@ -383,7 +406,10 @@ az_result pnp_helper_process_twin_data(
 
       if (json_reader->token.kind == AZ_JSON_TOKEN_BEGIN_OBJECT && sample_components_ptr != NULL
           && (is_component_in_model(
-                  az_span_init((uint8_t*)scratch_buf, len), sample_components_ptr, sample_components_num, &index)
+                  az_span_init((uint8_t*)scratch_buf, len),
+                  sample_components_ptr,
+                  sample_components_num,
+                  &index)
               == AZ_OK))
       {
         if (visit_component_properties(
@@ -425,4 +451,3 @@ az_result pnp_helper_process_twin_data(
 
   return AZ_OK;
 }
-
