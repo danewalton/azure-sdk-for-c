@@ -172,7 +172,7 @@ az_result sample_pnp_thermostat_get_telemetry_message(
           result = build_telemetry_message(
               handle, mqtt_message->payload_span, &mqtt_message->out_payload_span)))
   {
-    printf("Could not build telemetry payload, az_result %d\n", result);
+    printf("Could not build telemetry payload: error code = 0x%08x\n", result);
     return result;
   }
 
@@ -236,20 +236,28 @@ az_result sample_pnp_thermostat_process_property_update(
     handle->avg_temperature
         = handle->device_temperature_avg_total / handle->device_temperature_avg_count;
 
-    result = pnp_helper_create_reported_property_with_status(
-        mqtt_message->payload_span,
-        component_name,
-        property_name,
-        append_double,
-        (void*)&parsed_value,
-        200,
-        version,
-        temp_response_description_success,
-        &mqtt_message->out_payload_span);
+    if ((result = pnp_helper_create_reported_property_with_status(
+             mqtt_message->payload_span,
+             component_name,
+             property_name,
+             append_double,
+             (void*)&parsed_value,
+             200,
+             version,
+             temp_response_description_success,
+             &mqtt_message->out_payload_span))
+        != AZ_OK)
+    {
+      printf("Error to get reported property payload with status: error code = 0x%08x", result);
+    }
   }
 
-  result = az_iot_hub_client_twin_patch_get_publish_topic(
-      client, get_request_id(), mqtt_message->topic, mqtt_message->topic_length, NULL);
+  if ((result = az_iot_hub_client_twin_patch_get_publish_topic(
+           client, get_request_id(), mqtt_message->topic, mqtt_message->topic_length, NULL))
+      != AZ_OK)
+  {
+    printf("Error to get reported property topic with status: error code = 0x%08x", result);
+  }
 
   return result;
 }

@@ -86,7 +86,7 @@ az_result pnp_helper_create_reported_property(
  * @param[in] component_name The name of the component for the reported_property.
  * @param[in] property_name The name of the property to which to send an update.
  * @param[in] property_json_value The value of the property as valid JSON.
- * @param[in] ack_value The return value for the reported property.
+ * @param[in] ack_code The return value for the reported property.
  * @param[in] ack_version The ack version for the reported property.
  * @param[in] ack_description The optional description for the reported property.
  * @param[out] out_span The #az_span pointer to the output json payload.
@@ -97,7 +97,7 @@ az_result pnp_helper_create_reported_property_with_status(
     az_span property_name,
     pnp_append_property_callback append_callback,
     void* context,
-    int32_t ack_value,
+    int32_t ack_code,
     int32_t ack_version,
     az_span ack_description,
     az_span* out_span);

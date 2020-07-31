@@ -155,6 +155,7 @@ static int subscribe(void);
 // Messaging functions
 //
 static int mqtt_publish_message(char* topic, az_span payload, int qos);
+static void mqtt_receive_message(void);
 static int on_received(char* topicName, int topicLen, MQTTClient_message* message);
 static az_result send_device_info(void);
 static int send_telemetry_message(void);
@@ -228,10 +229,6 @@ int main(void)
     return rc;
   }
 
-  char* incoming_message_topic;
-  int incoming_message_topic_len;
-  MQTTClient_message* paho_message;
-
   // Initialize PnP Components
   if(components_init() != AZ_OK)
   {
@@ -239,10 +236,13 @@ int main(void)
   }
 
   // Send device info once on start up
-  if(send_device_info() != AZ_OK)
+  if (send_device_info() != AZ_OK)
   {
     LOG_ERROR("Could not send device info");
   }
+
+  // Receive response for device info publish
+  mqtt_receive_message();
 
   // First get the twin document to check for updated desired properties. Will then parse desired
   // property and update accordingly.
@@ -251,20 +251,7 @@ int main(void)
   while (device_operational)
   {
     // Receive any incoming messages from twin or commands
-    if (MQTTClient_receive(
-            mqtt_client,
-            &incoming_message_topic,
-            &incoming_message_topic_len,
-            &paho_message,
-            TIMEOUT_WAIT_FOR_RECEIVE_MESSAGE_MS)
-            == MQTTCLIENT_SUCCESS
-        && incoming_message_topic != NULL)
-    {
-      on_received(incoming_message_topic, incoming_message_topic_len, paho_message);
-
-      MQTTClient_freeMessage(&paho_message);
-      MQTTClient_free(incoming_message_topic);
-    }
+    mqtt_receive_message();
 
     // Send a telemetry message
     send_telemetry_message();
@@ -329,6 +316,28 @@ static az_result read_configuration_entry(
   }
 
   return AZ_OK;
+}
+
+static void mqtt_receive_message(void)
+{
+  char* incoming_message_topic;
+  int incoming_message_topic_len;
+  MQTTClient_message* paho_message;
+  // Receive any incoming messages from twin or commands
+  if (MQTTClient_receive(
+          mqtt_client,
+          &incoming_message_topic,
+          &incoming_message_topic_len,
+          &paho_message,
+          TIMEOUT_WAIT_FOR_RECEIVE_MESSAGE_MS)
+          == MQTTCLIENT_SUCCESS
+      && incoming_message_topic != NULL)
+  {
+    on_received(incoming_message_topic, incoming_message_topic_len, paho_message);
+
+    MQTTClient_freeMessage(&paho_message);
+    MQTTClient_free(incoming_message_topic);
+  }
 }
 
 static int mqtt_publish_message(char* topic, az_span payload, int qos)
