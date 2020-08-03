@@ -32,6 +32,8 @@ static char incoming_since_value[32];
 static const az_span desired_temp_property_name = AZ_SPAN_LITERAL_FROM_STR("targetTemperature");
 static const az_span temp_response_description_success = AZ_SPAN_LITERAL_FROM_STR("success");
 static const az_span temp_response_description_failed = AZ_SPAN_LITERAL_FROM_STR("failed");
+static const az_span max_temp_reported_property_name
+    = AZ_SPAN_LITERAL_FROM_STR("maxTempSinceLastReboot");
 
 // ISO8601 Time Format
 static const char iso_spec_time_format[] = "%Y-%m-%dT%H:%M:%S%z";
@@ -151,8 +153,48 @@ az_result sample_pnp_thermostat_init(
   handle->device_temperature_avg_count = 1;
   handle->device_temperature_avg_total = initial_temp;
   handle->avg_temperature = initial_temp;
+  handle->send_max_temp_property = true;
 
   return AZ_OK;
+}
+
+bool sample_pnp_thermostat_get_max_temp_report(
+    az_iot_hub_client* client,
+    sample_pnp_thermostat_component* handle,
+    sample_pnp_mqtt_message* mqtt_message)
+{
+  az_result result;
+  if (handle->send_max_temp_property)
+  {
+    if ((result = pnp_helper_create_reported_property(
+             mqtt_message->payload_span,
+             handle->component_name,
+             max_temp_reported_property_name,
+             append_double,
+             &handle->max_temperature,
+             &mqtt_message->out_payload_span))
+        != AZ_OK)
+    {
+      printf("Could not get reported property: error code = 0x%08x\n", result);
+      return false;
+    }
+    else if (
+        (result = az_iot_hub_client_twin_patch_get_publish_topic(
+             client, get_request_id(), mqtt_message->topic, mqtt_message->topic_length, NULL))
+        != AZ_OK)
+    {
+      printf("Error to get reported property topic with status: error code = 0x%08x\n", result);
+      return false;
+    }
+
+    handle->send_max_temp_property = false;
+
+    return true;
+  }
+  else
+  {
+    return false;
+  }
 }
 
 az_result sample_pnp_thermostat_get_telemetry_message(
@@ -223,6 +265,7 @@ az_result sample_pnp_thermostat_process_property_update(
     if (handle->current_temperature > handle->max_temperature)
     {
       handle->max_temperature = handle->current_temperature;
+      handle->send_max_temp_property = true;
     }
 
     if (handle->current_temperature < handle->min_temperature)

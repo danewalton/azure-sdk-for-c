@@ -26,6 +26,7 @@ typedef struct sample_pnp_thermostat_component_tag
   int32_t device_temperature_avg_count;
   double device_temperature_avg_total;
   double avg_temperature;
+  bool send_max_temp_property;
 } sample_pnp_thermostat_component;
 
 az_result sample_pnp_thermostat_init(
@@ -34,6 +35,11 @@ az_result sample_pnp_thermostat_init(
     double initial_temp);
 
 az_result sample_pnp_thermostat_get_telemetry_message(
+    az_iot_hub_client* client,
+    sample_pnp_thermostat_component* handle,
+    sample_pnp_mqtt_message* mqtt_message);
+
+bool sample_pnp_thermostat_get_max_temp_report(
     az_iot_hub_client* client,
     sample_pnp_thermostat_component* handle,
     sample_pnp_mqtt_message* mqtt_message);

@@ -163,6 +163,13 @@ with correct values substituted for each field.
 - **Twin**: Desired property with the field name `targetTemperature` and the `double` value for the desired temperature. Reported property with the field name `maxTempSinceLastReboot` and the `double` value for the highest temperature.Note that part of the PnP spec is a response to a desired property update from the service. The device will send back a reported property with a similarly named property and a set of "ack" values: `ac` for the HTTP-like ack code, `av` for ack version of the property, and an optional `ad` for an ack description.
 
 ### [IoT Hub PnP Component (Certificates)][pnp_component_sample]
+
+Use a PnP device composed of multiple components. This temperature controller is made up of the following sub-components
+
+- Thermometer 1
+- Thermometer 2
+- Device Info
+
 Link to the component DTMI can be found [here](https://github.com/Azure/opendigitaltwins-dtdl/blob/master/DTDL/v2/samples/TemperatureController.json).
 
 ## Troubleshooting
