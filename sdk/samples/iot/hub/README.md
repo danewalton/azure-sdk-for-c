@@ -166,8 +166,8 @@ with correct values substituted for each field.
 
 Use a PnP device composed of multiple components. This temperature controller is made up of the following sub-components
 
-- Thermometer 1
-- Thermometer 2
+- Temperature Sensor 1
+- Temperature Sensor 2
 - Device Info
 
 Link to the component DTMI can be found [here](https://github.com/Azure/opendigitaltwins-dtdl/blob/master/DTDL/v2/samples/TemperatureController.json).
