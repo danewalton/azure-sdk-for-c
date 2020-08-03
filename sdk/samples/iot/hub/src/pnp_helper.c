@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // SPDX-License-Identifier: MIT
 
+#include <stdint.h>
 #include <stdio.h>
 
 #include <azure/core/az_json.h>
@@ -12,8 +13,10 @@
 
 #define JSON_DOUBLE_DIGITS 2
 
+// Property values
 static char pnp_properties_buffer[64];
 
+// Device twin values
 static const az_span component_telemetry_prop_span = AZ_SPAN_LITERAL_FROM_STR("$.sub");
 static const az_span desired_temp_response_value_name = AZ_SPAN_LITERAL_FROM_STR("value");
 static const az_span desired_temp_ack_code_name = AZ_SPAN_LITERAL_FROM_STR("ac");
@@ -22,11 +25,10 @@ static const az_span desired_temp_ack_description_name = AZ_SPAN_LITERAL_FROM_ST
 static const az_span component_specifier_name = AZ_SPAN_LITERAL_FROM_STR("__t");
 static const az_span component_specifier_value = AZ_SPAN_LITERAL_FROM_STR("c");
 static const az_span command_separator = AZ_SPAN_LITERAL_FROM_STR("*");
-
-/* Device twin keys */
 static const az_span sample_iot_hub_twin_desired_version = AZ_SPAN_LITERAL_FROM_STR("$version");
 static const az_span sample_iot_hub_twin_desired = AZ_SPAN_LITERAL_FROM_STR("desired");
 
+// Visit each valid property for the component
 static az_result visit_component_properties(
     az_span component_name,
     az_json_reader* json_reader,
@@ -98,7 +100,7 @@ static az_result visit_component_properties(
   return AZ_OK;
 }
 
-/* Move reader to the value of property name */
+// Move reader to the value of property name
 static az_result sample_json_child_token_move(az_json_reader* json_reader, az_span property_name)
 {
   while (az_succeeded(az_json_reader_next_token(json_reader)))
@@ -131,6 +133,7 @@ static az_result sample_json_child_token_move(az_json_reader* json_reader, az_sp
   return AZ_ERROR_ITEM_NOT_FOUND;
 }
 
+// Check if the component name is in the model
 static az_result is_component_in_model(
     az_span component_name,
     const az_span** sample_components_ptr,
@@ -163,6 +166,7 @@ static az_result is_component_in_model(
   return AZ_ERROR_UNEXPECTED_CHAR;
 }
 
+// Get the telemetry topic for PnP
 az_result pnp_helper_get_telemetry_topic(
     az_iot_hub_client const* client,
     az_iot_hub_client_properties* properties,
@@ -202,6 +206,7 @@ az_result pnp_helper_get_telemetry_topic(
   return result;
 }
 
+// Parse the component name and command name from a span
 az_result pnp_helper_parse_command_name(
     az_span component_command,
     az_span* component_name,
@@ -222,6 +227,7 @@ az_result pnp_helper_parse_command_name(
   return AZ_OK;
 }
 
+// Create a reported property payload
 az_result pnp_helper_create_reported_property(
     az_span json_buffer,
     az_span component_name,
@@ -263,6 +269,7 @@ az_result pnp_helper_create_reported_property(
   return result;
 }
 
+// Create a reported property payload with status
 az_result pnp_helper_create_reported_property_with_status(
     az_span json_buffer,
     az_span component_name,
@@ -320,6 +327,7 @@ az_result pnp_helper_create_reported_property_with_status(
   return result;
 }
 
+// Process the twin properties and invoke user callback for each property
 az_result pnp_helper_process_twin_data(
     az_json_reader* json_reader,
     bool is_partial,

@@ -4,6 +4,8 @@
 #ifndef _az_PNP_HELPER_H
 #define _az_PNP_HELPER_H
 
+#include <stdint.h>
+
 #include <azure/core/az_json.h>
 #include <azure/core/az_result.h>
 #include <azure/core/az_span.h>
@@ -13,7 +15,7 @@
 
 #define PNP_STATUS_SUCCESS 200
 #define PNP_STATUS_BAD_FORMAT 400
-#define PNP_STATUS_NOT_FOUND  404
+#define PNP_STATUS_NOT_FOUND 404
 #define PNP_STATUS_INTERNAL_ERROR 500
 
 typedef void (*pnp_helper_property_callback)(
@@ -23,6 +25,10 @@ typedef void (*pnp_helper_property_callback)(
     int32_t version,
     void* user_context_callback);
 
+/**
+ * @brief Callback which is called for each property found by the #pnp_helper_process_twin_data()
+ * API.
+ */
 typedef az_result (*pnp_append_property_callback)(az_json_writer* json_writer, void* context);
 
 /**
@@ -107,10 +113,12 @@ az_result pnp_helper_create_reported_property_with_status(
  *
  * @param[in] json_reader A pointer to the json reader from which the properties will be retrieved.
  * @param[in] is_partial Boolean stating whether the JSON document is partial or not.
- * @param[in] sample_components_ptr A pointer to a set of `az_span` pointers containing all the names for components.
- * @param[in] sample_components_num Number of components in the set pointed to by `sample_components_ptr`.
+ * @param[in] sample_components_ptr A pointer to a set of `az_span` pointers containing all the
+ * names for components.
+ * @param[in] sample_components_num Number of components in the set pointed to by
+ * `sample_components_ptr`.
  * @param[in] scratch_buf Scratch buffer to place parsed JSON values.
- * @param[in] scratch_buf_len Length of `scratch_buf`. 
+ * @param[in] scratch_buf_len Length of `scratch_buf`.
  * @param[in] property_callback The callback which is called on each twin property.
  * @param[in] context_ptr Pointer to user context.
  */

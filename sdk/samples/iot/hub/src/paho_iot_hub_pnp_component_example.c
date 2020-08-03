@@ -586,7 +586,7 @@ static az_result sample_pnp_temp_controller_process_command(
   }
   else
   {
-    result = AZ_ERROR_UNEXPECTED_CHAR;
+    result = AZ_ERROR_ITEM_NOT_FOUND;
   }
 
   return result;
@@ -665,6 +665,7 @@ static void handle_command_message(
   }
   else
   {
+    LOG("Command not supported. Sending 404 response");
     // The command is not for this device
     if (az_failed(
             result = az_iot_hub_client_methods_response_get_publish_topic(
