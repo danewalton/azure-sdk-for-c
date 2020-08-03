@@ -281,6 +281,7 @@ static void components_init()
       != AZ_OK)
   {
     LOG_ERROR("Could not initialize thermostat 1: error code = 0x%08x", result);
+    exit(result);
   }
 
   else if (
@@ -289,6 +290,7 @@ static void components_init()
       != AZ_OK)
   {
     LOG_ERROR("Could not initialize thermostat 2: error code = 0x%08x", result);
+    exit(result);
   }
 
   LOG_SUCCESS("Initialized PnP components");
