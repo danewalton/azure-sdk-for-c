@@ -244,10 +244,79 @@ AZ_NODISCARD az_result az_iot_pnp_client_telemetry_get_publish_topic(
     az_iot_hub_client_properties const* properties,
     char* mqtt_topic,
     size_t mqtt_topic_size,
+    size_t* out_mqtt_topic_length);
+
+/*
+ *
+ * PnP Command APIs
+ *
+ */
+
+/**
+ * @brief The MQTT topic filter to subscribe to command requests.
+ * @remark Commands MQTT Publish messages will have QoS At most once (0).
+ */
+#define AZ_IOT_PNP_CLIENT_COMMANDS_SUBSCRIBE_TOPIC "$iothub/methods/POST/#"
+
+/**
+ * @brief A method request received from IoT Hub.
+ *
+ */
+typedef struct
+{
+  az_span request_id; /**< The request id.
+                       * @note The application must match the method request and method response. */
+  az_span component; /**< The name of the component which the method was invoked for.
+                      * @note Can be `AZ_SPAN_NULL` if for the root component */
+  az_span name; /**< The method name. */
+} az_iot_pnp_client_method_request;
+
+/**
+ * @brief Attempts to parse a received message's topic.
+ *
+ * @param[in] client The #az_iot_hub_client to use for this call.
+ * @param[in] received_topic An #az_span containing the received topic.
+ * @param[out] out_request If the message is a method request, this will contain the
+ *                         #az_iot_hub_client_method_request.
+ * @return #az_result
+ *         - `AZ_ERROR_IOT_TOPIC_NO_MATCH` if the topic is not matching the expected format.
+ */
+AZ_NODISCARD az_result az_iot_pnp_client_commands_parse_received_topic(
+    az_iot_hub_client const* client,
+    az_span received_topic,
+    az_iot_pnp_client_method_request* out_request);
+
+/**
+ * @brief Gets the MQTT topic that must be used to respond to method requests.
+ *
+ * @param[in] client The #az_iot_hub_client to use for this call.
+ * @param[in] request_id The request id. Must match a received #az_iot_hub_client_method_request
+ *                       request_id.
+ * @param[in] status A code that indicates the result of the method, as defined by the user.
+ * @param[out] mqtt_topic A buffer with sufficient capacity to hold the MQTT topic. If
+ *                        successful, contains a null-terminated string with the topic that
+ *                        needs to be passed to the MQTT client.
+ * @param[in] mqtt_topic_size The size, in bytes of \p mqtt_topic.
+ * @param[out] out_mqtt_topic_length __[nullable]__ Contains the string length, in bytes, of
+ *                                                  \p mqtt_topic. Can be `NULL`.
+ * @return #az_result
+ */
+AZ_NODISCARD az_result az_iot_pnp_client_methods_response_get_publish_topic(
+    az_iot_pnp_client const* client,
+    az_span request_id,
+    uint16_t status,
+    char* mqtt_topic,
+    size_t mqtt_topic_size,
     size_t* out_mqtt_topic_length)
-    {
-      return az_iot_hub_client_telemetry_get_publish_topic(&(client->_internal.iot_hub_client), )
-    }
+{
+  return az_iot_hub_client_methods_response_get_publish_topic(
+      &client->_internal.iot_hub_client,
+      request_id,
+      status,
+      mqtt_topic,
+      mqtt_topic_size,
+      out_mqtt_topic_length);
+}
 
 #include <_az_cfg_suffix.h>
 
