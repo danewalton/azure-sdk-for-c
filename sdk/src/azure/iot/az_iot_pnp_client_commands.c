@@ -21,7 +21,7 @@ static const az_span commands_response_topic_properties = AZ_SPAN_LITERAL_FROM_S
 static const az_span command_separator = AZ_SPAN_LITERAL_FROM_STR("*");
 
 AZ_NODISCARD az_result az_iot_pnp_client_commands_parse_received_topic(
-    az_iot_hub_client const* client,
+    az_iot_pnp_client const* client,
     az_span received_topic,
     az_iot_pnp_client_method_request* out_request)
 {
