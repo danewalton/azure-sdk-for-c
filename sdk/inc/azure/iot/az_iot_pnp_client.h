@@ -10,6 +10,7 @@
 #ifndef _az_IOT_PNP_CLIENT_H
 #define _az_IOT_PNP_CLIENT_H
 
+#include <azure/core/az_json.h>
 #include <azure/core/az_result.h>
 #include <azure/core/az_span.h>
 
@@ -274,7 +275,7 @@ typedef struct
 /**
  * @brief Attempts to parse a received message's topic.
  *
- * @param[in] client The #az_iot_hub_client to use for this call.
+ * @param[in] client The #az_iot_pnp_client to use for this call.
  * @param[in] received_topic An #az_span containing the received topic.
  * @param[out] out_request If the message is a method request, this will contain the
  *                         #az_iot_hub_client_method_request.
@@ -282,14 +283,14 @@ typedef struct
  *         - `AZ_ERROR_IOT_TOPIC_NO_MATCH` if the topic is not matching the expected format.
  */
 AZ_NODISCARD az_result az_iot_pnp_client_commands_parse_received_topic(
-    az_iot_hub_client const* client,
+    az_iot_pnp_client const* client,
     az_span received_topic,
     az_iot_pnp_client_method_request* out_request);
 
 /**
  * @brief Gets the MQTT topic that must be used to respond to method requests.
  *
- * @param[in] client The #az_iot_hub_client to use for this call.
+ * @param[in] client The #az_iot_pnp_client to use for this call.
  * @param[in] request_id The request id. Must match a received #az_iot_hub_client_method_request
  *                       request_id.
  * @param[in] status A code that indicates the result of the method, as defined by the user.
@@ -317,6 +318,36 @@ AZ_NODISCARD az_result az_iot_pnp_client_methods_response_get_publish_topic(
       mqtt_topic_size,
       out_mqtt_topic_length);
 }
+
+/**
+ * @brief Append the necessary characters to a JSON payload to begin a twin component.
+ *
+ * @param[in] client The #az_iot_pnp_client to use for this call.
+ * @param[in,out] The #az_json_writer to append the necessary characters for an IoT Plug and Play
+ * component.
+ * @param [in] component_name The component name to begin.
+ *
+ * @return #az_result
+ */
+AZ_NODISCARD az_result az_iot_pnp_twin_property_begin_component(
+    az_iot_pnp_client const* client,
+    az_json_writer* json_writer,
+    az_span component_name);
+
+/**
+ * @brief Append the necessary characters to a JSON payload to end a twin component.
+ *
+ * @param[in] client The #az_iot_pnp_client to use for this call.
+ * @param[in,out] The #az_json_writer to append the necessary characters for an IoT Plug and Play
+ * component.
+ * @param [in] component_name The component name to end.
+ *
+ * @return #az_result
+ */
+AZ_NODISCARD az_result az_iot_pnp_twin_property_end_component(
+    az_iot_pnp_client const* client,
+    az_json_writer* json_writer,
+    az_span component_name);
 
 #include <_az_cfg_suffix.h>
 
