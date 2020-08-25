@@ -10,7 +10,7 @@
 #include <azure/iot/az_iot_hub_client.h>
 #include <azure/iot/az_iot_pnp_client.h>
 
-#include <_az_cfg.h>
+#include <azure/core/_az_cfg.h>
 
 AZ_NODISCARD az_result az_iot_pnp_client_init(
     az_iot_pnp_client* client,

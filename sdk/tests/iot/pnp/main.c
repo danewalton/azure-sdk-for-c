@@ -9,7 +9,7 @@
 
 #include <cmocka.h>
 
-#include "test_az_iot_hub_client.h"
+#include "test_az_iot_pnp_client.h"
 
 int main()
 {
