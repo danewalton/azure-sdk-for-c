@@ -15,12 +15,10 @@ int main()
 {
   int result = 0;
 
-  result += test_iot_hub_c2d();
-  result += test_iot_hub_client();
-  result += test_iot_sas_token();
-  result += test_iot_hub_telemetry();
-  result += test_az_iot_hub_client_twin();
-  result += test_iot_hub_methods();
+  result += test_az_iot_pnp_client();
+  result += test_az_iot_pnp_client_methods();
+  result += test_az_iot_pnp_client_telemetry();
+  result += test_az_iot_pnp_client_twin();
 
   return result;
 }

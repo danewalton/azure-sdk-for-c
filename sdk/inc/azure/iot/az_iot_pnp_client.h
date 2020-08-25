@@ -242,7 +242,7 @@ AZ_NODISCARD AZ_INLINE az_result az_iot_pnp_client_get_sas_password(
 AZ_NODISCARD az_result az_iot_pnp_client_telemetry_get_publish_topic(
     az_iot_pnp_client const* client,
     az_span component_name,
-    az_iot_hub_client_properties const* properties,
+    az_iot_properties const* properties,
     char* mqtt_topic,
     size_t mqtt_topic_size,
     size_t* out_mqtt_topic_length);
@@ -270,7 +270,7 @@ typedef struct
   az_span component; /**< The name of the component which the method was invoked for.
                       * @note Can be `AZ_SPAN_NULL` if for the root component */
   az_span name; /**< The method name. */
-} az_iot_pnp_client_method_request;
+} az_iot_pnp_client_command_request;
 
 /**
  * @brief Attempts to parse a received message's topic.
@@ -278,20 +278,20 @@ typedef struct
  * @param[in] client The #az_iot_pnp_client to use for this call.
  * @param[in] received_topic An #az_span containing the received topic.
  * @param[out] out_request If the message is a method request, this will contain the
- *                         #az_iot_hub_client_method_request.
+ *                         #az_iot_pnp_client_command_request.
  * @return #az_result
  *         - `AZ_ERROR_IOT_TOPIC_NO_MATCH` if the topic is not matching the expected format.
  */
 AZ_NODISCARD az_result az_iot_pnp_client_commands_parse_received_topic(
     az_iot_pnp_client const* client,
     az_span received_topic,
-    az_iot_pnp_client_method_request* out_request);
+    az_iot_pnp_client_command_request* out_request);
 
 /**
  * @brief Gets the MQTT topic that must be used to respond to method requests.
  *
  * @param[in] client The #az_iot_pnp_client to use for this call.
- * @param[in] request_id The request id. Must match a received #az_iot_hub_client_method_request
+ * @param[in] request_id The request id. Must match a received #az_iot_pnp_client_command_request
  *                       request_id.
  * @param[in] status A code that indicates the result of the method, as defined by the user.
  * @param[out] mqtt_topic A buffer with sufficient capacity to hold the MQTT topic. If
@@ -348,6 +348,15 @@ AZ_NODISCARD az_result az_iot_pnp_twin_property_end_component(
     az_iot_pnp_client const* client,
     az_json_writer* json_writer,
     az_span component_name);
+
+/**
+ * @brief A
+ */
+AZ_NODISCARD az_result az_iot_pnp_twin_property_read(
+    az_iot_pnp_client const* client,
+    az_json_reader* json_reader,
+    az_span* out_component_name,
+    az_json_reader* out_property_values)
 
 #include <_az_cfg_suffix.h>
 
