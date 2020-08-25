@@ -260,16 +260,17 @@ AZ_NODISCARD az_result az_iot_pnp_client_telemetry_get_publish_topic(
 #define AZ_IOT_PNP_CLIENT_COMMANDS_SUBSCRIBE_TOPIC "$iothub/methods/POST/#"
 
 /**
- * @brief A method request received from IoT Hub.
+ * @brief A command request received from IoT Hub.
  *
  */
 typedef struct
 {
-  az_span request_id; /**< The request id.
-                       * @note The application must match the method request and method response. */
-  az_span component; /**< The name of the component which the method was invoked for.
+  az_span
+      request_id; /**< The request id.
+                   * @note The application must match the command request and command response. */
+  az_span component; /**< The name of the component which the command was invoked for.
                       * @note Can be `AZ_SPAN_NULL` if for the root component */
-  az_span name; /**< The method name. */
+  az_span name; /**< The command name. */
 } az_iot_pnp_client_command_request;
 
 /**
@@ -277,7 +278,7 @@ typedef struct
  *
  * @param[in] client The #az_iot_pnp_client to use for this call.
  * @param[in] received_topic An #az_span containing the received topic.
- * @param[out] out_request If the message is a method request, this will contain the
+ * @param[out] out_request If the message is a command request, this will contain the
  *                         #az_iot_pnp_client_command_request.
  * @return #az_result
  *         - `AZ_ERROR_IOT_TOPIC_NO_MATCH` if the topic is not matching the expected format.
@@ -288,12 +289,12 @@ AZ_NODISCARD az_result az_iot_pnp_client_commands_parse_received_topic(
     az_iot_pnp_client_command_request* out_request);
 
 /**
- * @brief Gets the MQTT topic that must be used to respond to method requests.
+ * @brief Gets the MQTT topic that must be used to respond to command requests.
  *
  * @param[in] client The #az_iot_pnp_client to use for this call.
  * @param[in] request_id The request id. Must match a received #az_iot_pnp_client_command_request
  *                       request_id.
- * @param[in] status A code that indicates the result of the method, as defined by the user.
+ * @param[in] status A code that indicates the result of the command, as defined by the user.
  * @param[out] mqtt_topic A buffer with sufficient capacity to hold the MQTT topic. If
  *                        successful, contains a null-terminated string with the topic that
  *                        needs to be passed to the MQTT client.
@@ -302,7 +303,7 @@ AZ_NODISCARD az_result az_iot_pnp_client_commands_parse_received_topic(
  *                                                  \p mqtt_topic. Can be `NULL`.
  * @return #az_result
  */
-AZ_NODISCARD az_result az_iot_pnp_client_methods_response_get_publish_topic(
+AZ_NODISCARD az_result az_iot_pnp_client_commands_response_get_publish_topic(
     az_iot_pnp_client const* client,
     az_span request_id,
     uint16_t status,
@@ -318,6 +319,67 @@ AZ_NODISCARD az_result az_iot_pnp_client_methods_response_get_publish_topic(
       mqtt_topic_size,
       out_mqtt_topic_length);
 }
+
+/**
+ *
+ * Twin APIs
+ *
+ */
+
+/**
+ * @brief The MQTT topic filter to subscribe to twin operation responses.
+ * @remark Twin MQTT Publish messages will have QoS At most once (0).
+ */
+#define AZ_IOT_HUB_CLIENT_TWIN_RESPONSE_SUBSCRIBE_TOPIC "$iothub/twin/res/#"
+
+/**
+ * @brief Gets the MQTT topic filter to subscribe to twin desired property changes.
+ * @remark Twin MQTT Publish messages will have QoS At most once (0).
+ */
+#define AZ_IOT_HUB_CLIENT_TWIN_PATCH_SUBSCRIBE_TOPIC "$iothub/twin/PATCH/properties/desired/#"
+
+/**
+ * @brief Twin response type.
+ *
+ */
+typedef enum
+{
+  AZ_IOT_CLIENT_TWIN_RESPONSE_TYPE_GET = 1,
+  AZ_IOT_CLIENT_TWIN_RESPONSE_TYPE_DESIRED_PROPERTIES = 2,
+  AZ_IOT_CLIENT_TWIN_RESPONSE_TYPE_REPORTED_PROPERTIES = 3,
+} az_iot_pnp_client_twin_response_type;
+
+/**
+ * @brief Twin response.
+ *
+ */
+typedef struct
+{
+  az_iot_pnp_client_twin_response_type response_type; /**< Twin response type. */
+  az_iot_status status; /**< The operation status. */
+  az_span
+      request_id; /**< Request ID matches the ID specified when issuing a Get or Patch command. */
+  az_span version; /**< The Twin object version.
+                    * @remark This is only returned when
+                    * response_type==AZ_IOT_CLIENT_TWIN_RESPONSE_TYPE_DESIRED_PROPERTIES
+                    * or
+                    * response_type==AZ_IOT_CLIENT_TWIN_RESPONSE_TYPE_REPORTED_PROPERTIES. */
+} az_iot_pnp_client_twin_response;
+
+/**
+ * @brief Attempts to parse a received message's topic.
+ *
+ * @param[in] client The #az_iot_pnp_client to use for this call.
+ * @param[in] received_topic An #az_span containing the received topic.
+ * @param[out] out_twin_response If the message is twin-operation related, this will contain the
+ *                         #az_iot_pnp_client_twin_response.
+ * @return #az_result
+ *         - `AZ_ERROR_IOT_TOPIC_NO_MATCH` if the topic is not matching the expected format.
+ */
+AZ_NODISCARD az_result az_iot_pnp_client_twin_parse_received_topic(
+    az_iot_pnp_client const* client,
+    az_span received_topic,
+    az_iot_pnp_client_twin_response* out_twin_response);
 
 /**
  * @brief Append the necessary characters to a JSON payload to begin a twin component.
@@ -350,13 +412,25 @@ AZ_NODISCARD az_result az_iot_pnp_twin_property_end_component(
     az_span component_name);
 
 /**
- * @brief A
+ * @brief Read the IoT Plug and Play twin properties component by component
+ *
+ * @param[in] client The #az_iot_pnp_client to use for this call.
+ * @param[in] json_reader The #az_json_reader to parse through.
+ * @param[in/out] ref_component_name The #az_span* which is changed only if a new component name is
+ * found.
+ * @param[out] out_property_value The #az_json_reader* representing the value of the property.
+ *
+ * @return #az_result
  */
 AZ_NODISCARD az_result az_iot_pnp_twin_property_read(
     az_iot_pnp_client const* client,
     az_json_reader* json_reader,
-    az_span* out_component_name,
-    az_json_reader* out_property_values)
+    az_span* ref_component_name,
+    az_json_reader* out_property_value);
+// This could function like the one for the Azure SDK for C if the ref_component_name is effectively
+// a ref_component_name. The user would have to pass an empty span pointer at which point the first
+// component would populate the span. The user would have to pass back the pointer to us and we
+// would change it only if the component changes.
 
 #include <_az_cfg_suffix.h>
 
