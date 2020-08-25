@@ -19,7 +19,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#include <_az_cfg_prefix.h>
+#include <azure/core/_az_cfg_prefix.h>
 
 /**
  * @brief Azure IoT PnP Client options.
@@ -303,7 +303,7 @@ AZ_NODISCARD az_result az_iot_pnp_client_commands_parse_received_topic(
  *                                                  \p mqtt_topic. Can be `NULL`.
  * @return #az_result
  */
-AZ_NODISCARD az_result az_iot_pnp_client_commands_response_get_publish_topic(
+AZ_NODISCARD AZ_INLINE az_result az_iot_pnp_client_commands_response_get_publish_topic(
     az_iot_pnp_client const* client,
     az_span request_id,
     uint16_t status,
@@ -344,9 +344,9 @@ AZ_NODISCARD az_result az_iot_pnp_client_commands_response_get_publish_topic(
  */
 typedef enum
 {
-  AZ_IOT_CLIENT_TWIN_RESPONSE_TYPE_GET = 1,
-  AZ_IOT_CLIENT_TWIN_RESPONSE_TYPE_DESIRED_PROPERTIES = 2,
-  AZ_IOT_CLIENT_TWIN_RESPONSE_TYPE_REPORTED_PROPERTIES = 3,
+  AZ_IOT_PNP_CLIENT_TWIN_RESPONSE_TYPE_GET = 1,
+  AZ_IOT_PNP_CLIENT_TWIN_RESPONSE_TYPE_DESIRED_PROPERTIES = 2,
+  AZ_IOT_PNP_CLIENT_TWIN_RESPONSE_TYPE_REPORTED_PROPERTIES = 3,
 } az_iot_pnp_client_twin_response_type;
 
 /**
@@ -436,6 +436,6 @@ AZ_NODISCARD az_result az_iot_pnp_twin_property_read(
 // our land, level one would be a component name and level two is any properties and their values.
 // Therefore is we kick out of a level,
 
-#include <_az_cfg_suffix.h>
+#include <azure/core/_az_cfg_suffix.h>
 
 #endif //!_az_IOT_PNP_CLIENT_H
