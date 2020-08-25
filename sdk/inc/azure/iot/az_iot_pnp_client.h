@@ -416,7 +416,7 @@ AZ_NODISCARD az_result az_iot_pnp_twin_property_end_component(
  *
  * @param[in] client The #az_iot_pnp_client to use for this call.
  * @param[in] json_reader The #az_json_reader to parse through.
- * @param[in/out] ref_component_name The #az_span* which is changed only if a new component name is
+ * @param[in/out] ref_component_name The #az_json_token* which is changed only if a new component name is
  * found.
  * @param[out] out_property_value The #az_json_reader* representing the value of the property.
  *
@@ -425,12 +425,16 @@ AZ_NODISCARD az_result az_iot_pnp_twin_property_end_component(
 AZ_NODISCARD az_result az_iot_pnp_twin_property_read(
     az_iot_pnp_client const* client,
     az_json_reader* json_reader,
-    az_span* ref_component_name,
+    az_json_token* ref_component_name,
+    az_json_token* out_property_name,
     az_json_reader* out_property_value);
 // This could function like the one for the Azure SDK for C if the ref_component_name is effectively
 // a ref_component_name. The user would have to pass an empty span pointer at which point the first
 // component would populate the span. The user would have to pass back the pointer to us and we
-// would change it only if the component changes.
+// would change it only if the component changes. The ref_component_name would be set each time it
+// hits an "end object" since each sub-object would be passed to the user as a json_reader. IE, in
+// our land, level one would be a component name and level two is any properties and their values.
+// Therefore is we kick out of a level,
 
 #include <_az_cfg_suffix.h>
 
