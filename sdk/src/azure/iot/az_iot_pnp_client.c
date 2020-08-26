@@ -7,10 +7,21 @@
 #include <azure/core/internal/az_precondition_internal.h>
 #include <azure/core/az_result.h>
 #include <azure/core/az_span.h>
+#include <azure/core/az_version.h>
 #include <azure/iot/az_iot_hub_client.h>
 #include <azure/iot/az_iot_pnp_client.h>
 
 #include <azure/core/_az_cfg.h>
+
+static const az_span client_sdk_version
+    = AZ_SPAN_LITERAL_FROM_STR("DeviceClientType=c%2F" AZ_SDK_VERSION_STRING);
+
+AZ_NODISCARD az_iot_pnp_client_options az_iot_pnp_client_options_default()
+{
+  return (az_iot_pnp_client_options){ .module_id = AZ_SPAN_NULL,
+                                      .user_agent = client_sdk_version,
+                                      .model_id = AZ_SPAN_NULL };
+}
 
 AZ_NODISCARD az_result az_iot_pnp_client_init(
     az_iot_pnp_client* client,

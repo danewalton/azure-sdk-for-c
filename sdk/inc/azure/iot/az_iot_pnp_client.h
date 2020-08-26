@@ -242,7 +242,7 @@ AZ_NODISCARD AZ_INLINE az_result az_iot_pnp_client_get_sas_password(
 AZ_NODISCARD az_result az_iot_pnp_client_telemetry_get_publish_topic(
     az_iot_pnp_client const* client,
     az_span component_name,
-    az_iot_message_properties const* properties,
+    az_iot_message_properties* properties,
     char* mqtt_topic,
     size_t mqtt_topic_size,
     size_t* out_mqtt_topic_length);

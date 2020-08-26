@@ -19,31 +19,37 @@ static const az_span component_telemetry_prop_span = AZ_SPAN_LITERAL_FROM_STR("$
 AZ_NODISCARD az_result az_iot_pnp_client_telemetry_get_publish_topic(
     az_iot_pnp_client const* client,
     az_span component_name,
-    az_iot_hub_client_properties const* properties,
+    az_iot_message_properties* properties,
     char* mqtt_topic,
     size_t mqtt_topic_size,
     size_t* out_mqtt_topic_length)
 {
   _az_PRECONDITION_NOT_NULL(client);
-  _az_PRECONDITION_VALID_SPAN(component_name, 1, false);
   _az_PRECONDITION_NOT_NULL(mqtt_topic);
   _az_PRECONDITION(mqtt_topic_size > 0);
 
-  az_iot_hub_client_properties pnp_properties;
+  az_iot_message_properties pnp_properties;
 
-  if (properties == NULL)
+  if (az_span_size(component_name) > 0)
   {
-    properties = &pnp_properties;
+    if (properties == NULL)
+    {
+      properties = &pnp_properties;
 
-    AZ_RETURN_IF_FAILED(az_iot_hub_client_properties_init(
-        properties, AZ_SPAN_FROM_BUFFER(pnp_properties_buffer), 0));
+      AZ_RETURN_IF_FAILED(az_iot_message_properties_init(
+          properties, AZ_SPAN_FROM_BUFFER(pnp_properties_buffer), 0));
+    }
+
+    AZ_RETURN_IF_FAILED(az_iot_message_properties_append(
+        properties, component_telemetry_prop_span, component_name));
   }
 
-  AZ_RETURN_IF_FAILED(az_iot_hub_client_properties_append(
-      properties, component_telemetry_prop_span, component_name));
-
   AZ_RETURN_IF_FAILED(az_iot_hub_client_telemetry_get_publish_topic(
-      client, properties, mqtt_topic, mqtt_topic_size, out_mqtt_topic_length));
+      &client->_internal.iot_hub_client,
+      properties,
+      mqtt_topic,
+      mqtt_topic_size,
+      out_mqtt_topic_length));
 
   return AZ_OK;
 }
