@@ -15,15 +15,15 @@
 
 #include <azure/core/_az_cfg.h>
 
-static const az_span methods_topic_prefix = AZ_SPAN_LITERAL_FROM_STR("$iothub/methods/");
-static const az_span methods_topic_filter_suffix = AZ_SPAN_LITERAL_FROM_STR("POST/");
+static const az_span commands_topic_prefix = AZ_SPAN_LITERAL_FROM_STR("$iothub/methods/");
+static const az_span commands_topic_filter_suffix = AZ_SPAN_LITERAL_FROM_STR("POST/");
 static const az_span commands_response_topic_properties = AZ_SPAN_LITERAL_FROM_STR("/?$rid=");
 static const az_span command_separator = AZ_SPAN_LITERAL_FROM_STR("*");
 
 AZ_NODISCARD az_result az_iot_pnp_client_commands_parse_received_topic(
     az_iot_pnp_client const* client,
     az_span received_topic,
-    az_iot_pnp_client_method_request* out_request)
+    az_iot_pnp_client_command_request* out_request)
 {
   _az_PRECONDITION_NOT_NULL(client);
   _az_PRECONDITION_VALID_SPAN(received_topic, 1, false);
@@ -31,7 +31,7 @@ AZ_NODISCARD az_result az_iot_pnp_client_commands_parse_received_topic(
 
   (void)client;
 
-  int32_t index = az_span_find(received_topic, methods_topic_prefix);
+  int32_t index = az_span_find(received_topic, commands_topic_prefix);
 
   if (index == -1)
   {
@@ -41,9 +41,9 @@ AZ_NODISCARD az_result az_iot_pnp_client_commands_parse_received_topic(
   _az_LOG_WRITE(AZ_LOG_MQTT_RECEIVED_TOPIC, received_topic);
 
   received_topic = az_span_slice(
-      received_topic, index + az_span_size(methods_topic_prefix), az_span_size(received_topic));
+      received_topic, index + az_span_size(commands_topic_prefix), az_span_size(received_topic));
 
-  index = az_span_find(received_topic, methods_topic_filter_suffix);
+  index = az_span_find(received_topic, commands_topic_filter_suffix);
 
   if (index == -1)
   {
@@ -52,7 +52,7 @@ AZ_NODISCARD az_result az_iot_pnp_client_commands_parse_received_topic(
 
   received_topic = az_span_slice(
       received_topic,
-      index + az_span_size(methods_topic_filter_suffix),
+      index + az_span_size(commands_topic_filter_suffix),
       az_span_size(received_topic));
 
   index = az_span_find(received_topic, commands_response_topic_properties);
