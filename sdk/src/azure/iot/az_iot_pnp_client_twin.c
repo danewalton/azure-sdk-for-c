@@ -8,7 +8,28 @@
 static const az_span component_property_label_name = AZ_SPAN_LITERAL_FROM_STR("__t");
 static const az_span component_property_label_value = AZ_SPAN_LITERAL_FROM_STR("c");
 
-AZ_NODISCARD az_result az_iot_pnp_twin_property_begin_component(
+AZ_NODISCARD az_result az_iot_pnp_client_twin_parse_received_topic(
+    az_iot_pnp_client const* client,
+    az_span received_topic,
+    az_iot_pnp_client_twin_response* out_twin_response)
+{
+  _az_PRECONDITION_NOT_NULL(client);
+  _az_PRECONDITION_VALID_SPAN(received_topic, 1, false);
+  _az_PRECONDITION_NOT_NULL(out_twin_response);
+
+  az_iot_hub_client_twin_response hub_twin_response;
+  AZ_RETURN_IF_FAILED(az_iot_hub_client_twin_parse_received_topic(
+      &client->_internal.iot_hub_client, received_topic, &hub_twin_response));
+
+  out_twin_response->request_id = hub_twin_response.request_id;
+  out_twin_response->response_type = hub_twin_response.response_type;
+  out_twin_response->status = hub_twin_response.status;
+  out_twin_response->version = hub_twin_response.version;
+
+  return AZ_OK;
+}
+
+AZ_NODISCARD az_result az_iot_pnp_client_twin_property_begin_component(
     az_iot_pnp_client const* client,
     az_json_writer* json_writer,
     az_span component_name)
@@ -28,7 +49,7 @@ AZ_NODISCARD az_result az_iot_pnp_twin_property_begin_component(
   return AZ_OK;
 }
 
-AZ_NODISCARD az_result az_iot_pnp_twin_property_end_component(
+AZ_NODISCARD az_result az_iot_pnp_client_twin_property_end_component(
     az_iot_pnp_client const* client,
     az_json_writer* json_writer,
     az_span component_name)

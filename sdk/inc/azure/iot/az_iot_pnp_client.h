@@ -382,6 +382,65 @@ AZ_NODISCARD az_result az_iot_pnp_client_twin_parse_received_topic(
     az_iot_pnp_client_twin_response* out_twin_response);
 
 /**
+ * @brief Gets the MQTT topic that must be used to submit a Twin GET request.
+ * @remark The payload of the MQTT publish message should be empty.
+ *
+ * @param[in] client The #az_iot_pnp_client to use for this call.
+ * @param[in] request_id The request id.
+ * @param[out] mqtt_topic A buffer with sufficient capacity to hold the MQTT topic. If
+ *                        successful, contains a null-terminated string with the topic that
+ *                        needs to be passed to the MQTT client.
+ * @param[in] mqtt_topic_size The size, in bytes of \p mqtt_topic.
+ * @param[out] out_mqtt_topic_length __[nullable]__ Contains the string length, in bytes, of
+ *                                                  \p mqtt_topic. Can be `NULL`.
+ * @return #az_result
+ */
+AZ_NODISCARD AZ_INLINE az_result az_iot_pnp_client_twin_document_get_publish_topic(
+    az_iot_pnp_client const* client,
+    az_span request_id,
+    char* mqtt_topic,
+    size_t mqtt_topic_size,
+    size_t* out_mqtt_topic_length)
+{
+  return az_iot_hub_client_twin_document_get_publish_topic(
+      &client->_internal.iot_hub_client,
+      request_id,
+      mqtt_topic,
+      mqtt_topic_size,
+      out_mqtt_topic_length);
+}
+
+/**
+ * @brief Gets the MQTT topic that must be used to submit a Twin PATCH request.
+ * @remark The payload of the MQTT publish message should contain a JSON document
+ *         formatted according to the Twin specification.
+ *
+ * @param[in] client The #az_iot_pnp_client to use for this call.
+ * @param[in] request_id The request id.
+ * @param[out] mqtt_topic A buffer with sufficient capacity to hold the MQTT topic. If
+ *                        successful, contains a null-terminated string with the topic that
+ *                        needs to be passed to the MQTT client.
+ * @param[in] mqtt_topic_size The size, in bytes of \p mqtt_topic.
+ * @param[out] out_mqtt_topic_length __[nullable]__ Contains the string length, in bytes, of
+ *                                                  \p mqtt_topic. Can be `NULL`.
+ * @return #az_result
+ */
+AZ_NODISCARD AZ_INLINE az_result az_iot_pnp_client_twin_patch_get_publish_topic(
+    az_iot_pnp_client const* client,
+    az_span request_id,
+    char* mqtt_topic,
+    size_t mqtt_topic_size,
+    size_t* out_mqtt_topic_length)
+{
+  return az_iot_hub_client_twin_patch_get_publish_topic(
+      &client->_internal.iot_hub_client,
+      request_id,
+      mqtt_topic,
+      mqtt_topic_size,
+      out_mqtt_topic_length);
+}
+
+/**
  * @brief Append the necessary characters to a JSON payload to begin a twin component.
  *
  * @param[in] client The #az_iot_pnp_client to use for this call.
@@ -391,7 +450,7 @@ AZ_NODISCARD az_result az_iot_pnp_client_twin_parse_received_topic(
  *
  * @return #az_result
  */
-AZ_NODISCARD az_result az_iot_pnp_twin_property_begin_component(
+AZ_NODISCARD az_result az_iot_pnp_client_twin_property_begin_component(
     az_iot_pnp_client const* client,
     az_json_writer* json_writer,
     az_span component_name);
@@ -406,7 +465,7 @@ AZ_NODISCARD az_result az_iot_pnp_twin_property_begin_component(
  *
  * @return #az_result
  */
-AZ_NODISCARD az_result az_iot_pnp_twin_property_end_component(
+AZ_NODISCARD az_result az_iot_pnp_client_twin_property_end_component(
     az_iot_pnp_client const* client,
     az_json_writer* json_writer,
     az_span component_name);
@@ -416,8 +475,8 @@ AZ_NODISCARD az_result az_iot_pnp_twin_property_end_component(
  *
  * @param[in] client The #az_iot_pnp_client to use for this call.
  * @param[in] json_reader The #az_json_reader to parse through.
- * @param[in/out] ref_component_name The #az_json_token* which is changed only if a new component name is
- * found.
+ * @param[in/out] ref_component_name The #az_json_token* which is changed only if a new component
+ * name is found.
  * @param[out] out_property_value The #az_json_reader* representing the value of the property.
  *
  * @return #az_result
