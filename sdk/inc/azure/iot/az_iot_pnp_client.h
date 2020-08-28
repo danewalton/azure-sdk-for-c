@@ -481,7 +481,7 @@ AZ_NODISCARD az_result az_iot_pnp_client_twin_property_end_component(
  *
  * @return #az_result
  */
-AZ_NODISCARD az_result az_iot_pnp_twin_property_read(
+AZ_NODISCARD az_result az_iot_pnp_client_twin_property_read(
     az_iot_pnp_client const* client,
     az_json_reader* json_reader,
     az_json_token* ref_component_name,
