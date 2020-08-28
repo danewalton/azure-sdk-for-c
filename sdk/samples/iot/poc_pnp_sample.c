@@ -80,7 +80,7 @@ static void handle_device_twin_message(
     az_json_reader property_value;
     az_json_reader_init(&jr, twin_message_span, NULL);
 
-    while(az_succeeded(az_iot_pnp_twin_property_read(&pnp_client, &jr, &component_name, &property_name, &property_value)))
+    while(az_succeeded(az_iot_pnp_client_twin_property_read(&pnp_client, &jr, &component_name, &property_name, &property_value)))
     {
       if (az_json_token_is_text_equal(&component_name, AZ_SPAN_FROM_STR("component_one")))
       {
