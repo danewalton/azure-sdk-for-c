@@ -1,0 +1,14 @@
+{
+  "component_one": {
+    "prop_one": 1,
+    "prop_two": "string"
+  },
+  "component_two": {
+    "prop_three": 45.6,
+    "prop_four": "string"
+  },
+  "not_component": {
+    "stuff": 42,
+    "more_stuff": "hello"
+  }
+}

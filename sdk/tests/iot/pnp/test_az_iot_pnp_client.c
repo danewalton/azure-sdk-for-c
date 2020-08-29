@@ -31,6 +31,11 @@
 static const az_span test_device_id = AZ_SPAN_LITERAL_FROM_STR(TEST_DEVICE_ID_STR);
 static const az_span test_model_id = AZ_SPAN_LITERAL_FROM_STR(TEST_MODEL_ID);
 static const az_span test_hub_hostname = AZ_SPAN_LITERAL_FROM_STR(TEST_HUB_HOSTNAME_STR);
+static az_span test_component_one = AZ_SPAN_LITERAL_FROM_STR("component_one");
+static az_span test_component_two = AZ_SPAN_LITERAL_FROM_STR("component_two");
+static az_span* test_component_names[] = { &test_component_one, &test_component_two };
+static const int32_t test_component_names_size
+    = sizeof(test_component_names) / sizeof(test_component_names[0]);
 
 static const char test_correct_user_name_with_model_id[]
     = "myiothub.azure-devices.net/my_device/?api-version=2020-05-31-preview&" PLATFORM_USER_AGENT
@@ -53,8 +58,14 @@ static void test_az_iot_pnp_client_init_NULL_client_fails(void** state)
 {
   (void)state;
 
-  ASSERT_PRECONDITION_CHECKED(
-      az_iot_pnp_client_init(NULL, test_hub_hostname, test_device_id, test_model_id, NULL));
+  ASSERT_PRECONDITION_CHECKED(az_iot_pnp_client_init(
+      NULL,
+      test_hub_hostname,
+      test_device_id,
+      test_model_id,
+      test_component_names,
+      test_component_names_size,
+      NULL));
 }
 
 static void test_az_iot_pnp_client_init_NULL_device_id_fails(void** state)
@@ -63,8 +74,14 @@ static void test_az_iot_pnp_client_init_NULL_device_id_fails(void** state)
 
   az_iot_pnp_client client;
 
-  ASSERT_PRECONDITION_CHECKED(
-      az_iot_pnp_client_init(&client, test_hub_hostname, AZ_SPAN_NULL, test_model_id, NULL));
+  ASSERT_PRECONDITION_CHECKED(az_iot_pnp_client_init(
+      &client,
+      test_hub_hostname,
+      AZ_SPAN_NULL,
+      test_model_id,
+      test_component_names,
+      test_component_names_size,
+      NULL));
 }
 
 static void test_az_iot_pnp_client_init_NULL_model_id_fails(void** state)
@@ -73,8 +90,14 @@ static void test_az_iot_pnp_client_init_NULL_model_id_fails(void** state)
 
   az_iot_pnp_client client;
 
-  ASSERT_PRECONDITION_CHECKED(
-      az_iot_pnp_client_init(&client, test_hub_hostname, test_device_id, AZ_SPAN_NULL, NULL));
+  ASSERT_PRECONDITION_CHECKED(az_iot_pnp_client_init(
+      &client,
+      test_hub_hostname,
+      test_device_id,
+      AZ_SPAN_NULL,
+      test_component_names,
+      test_component_names_size,
+      NULL));
 }
 
 static void test_az_iot_pnp_client_init_NULL_hub_hostname_id_fails(void** state)
@@ -83,8 +106,14 @@ static void test_az_iot_pnp_client_init_NULL_hub_hostname_id_fails(void** state)
 
   az_iot_pnp_client client;
 
-  ASSERT_PRECONDITION_CHECKED(
-      az_iot_pnp_client_init(&client, AZ_SPAN_NULL, test_device_id, test_model_id, NULL));
+  ASSERT_PRECONDITION_CHECKED(az_iot_pnp_client_init(
+      &client,
+      AZ_SPAN_NULL,
+      test_device_id,
+      test_model_id,
+      test_component_names,
+      test_component_names_size,
+      NULL));
 }
 
 static void test_az_iot_pnp_client_get_user_name_NULL_client_fails(void** state)
@@ -175,7 +204,14 @@ static void test_az_iot_pnp_client_init_succeed(void** state)
 
   az_iot_pnp_client client;
   assert_int_equal(
-      az_iot_pnp_client_init(&client, test_hub_hostname, test_device_id, test_model_id, NULL),
+      az_iot_pnp_client_init(
+          &client,
+          test_hub_hostname,
+          test_device_id,
+          test_model_id,
+          test_component_names,
+          test_component_names_size,
+          NULL),
       AZ_OK);
 
   assert_memory_equal(
@@ -197,7 +233,14 @@ static void test_az_iot_pnp_client_init_custom_options_succeed(void** state)
   options.module_id = AZ_SPAN_FROM_STR(TEST_MODULE_ID);
   options.user_agent = AZ_SPAN_FROM_STR(TEST_USER_AGENT);
   assert_int_equal(
-      az_iot_pnp_client_init(&client, test_hub_hostname, test_device_id, test_model_id, &options),
+      az_iot_pnp_client_init(
+          &client,
+          test_hub_hostname,
+          test_device_id,
+          test_model_id,
+          test_component_names,
+          test_component_names_size,
+          &options),
       AZ_OK);
 
   assert_memory_equal(
@@ -224,7 +267,14 @@ static void test_az_iot_pnp_client_get_user_name_succeed(void** state)
 
   az_iot_pnp_client client;
   assert_int_equal(
-      az_iot_pnp_client_init(&client, test_hub_hostname, test_device_id, test_model_id, NULL),
+      az_iot_pnp_client_init(
+          &client,
+          test_hub_hostname,
+          test_device_id,
+          test_model_id,
+          test_component_names,
+          test_component_names_size,
+          NULL),
       AZ_OK);
 
   char mqtt_topic_buf[TEST_SPAN_BUFFER_SIZE];
@@ -245,7 +295,14 @@ static void test_az_iot_pnp_client_get_user_name_small_buffer_fail(void** state)
 
   az_iot_pnp_client client;
   assert_int_equal(
-      az_iot_pnp_client_init(&client, test_hub_hostname, test_device_id, test_model_id, NULL),
+      az_iot_pnp_client_init(
+          &client,
+          test_hub_hostname,
+          test_device_id,
+          test_model_id,
+          test_component_names,
+          test_component_names_size,
+          NULL),
       AZ_OK);
 
   char mqtt_topic_buf[sizeof(test_correct_user_name_with_model_id) - 2];
@@ -266,7 +323,14 @@ static void test_az_iot_pnp_client_get_user_name_user_options_succeed(void** sta
   options.module_id = AZ_SPAN_FROM_STR(TEST_MODULE_ID);
   options.user_agent = AZ_SPAN_FROM_STR(TEST_USER_AGENT);
   assert_int_equal(
-      az_iot_pnp_client_init(&client, test_hub_hostname, test_device_id, test_model_id, &options),
+      az_iot_pnp_client_init(
+          &client,
+          test_hub_hostname,
+          test_device_id,
+          test_model_id,
+          test_component_names,
+          test_component_names_size,
+          &options),
       AZ_OK);
 
   char mqtt_topic_buf[TEST_SPAN_BUFFER_SIZE];
@@ -289,7 +353,14 @@ static void test_az_iot_pnp_client_get_user_name_user_options_small_buffer_fail(
   options.module_id = AZ_SPAN_FROM_STR(TEST_MODULE_ID);
   options.user_agent = AZ_SPAN_FROM_STR(TEST_USER_AGENT);
   assert_int_equal(
-      az_iot_pnp_client_init(&client, test_hub_hostname, test_device_id, test_model_id, &options),
+      az_iot_pnp_client_init(
+          &client,
+          test_hub_hostname,
+          test_device_id,
+          test_model_id,
+          test_component_names,
+          test_component_names_size,
+          &options),
       AZ_OK);
 
   char mqtt_topic_buf[sizeof(test_correct_user_name_with_module_id) - 2];
@@ -310,7 +381,14 @@ static void test_az_iot_pnp_client_get_user_name_with_model_id_succeed(void** st
   options.model_id = AZ_SPAN_FROM_STR(TEST_MODEL_ID);
 
   assert_int_equal(
-      az_iot_pnp_client_init(&client, test_hub_hostname, test_device_id, test_model_id, &options),
+      az_iot_pnp_client_init(
+          &client,
+          test_hub_hostname,
+          test_device_id,
+          test_model_id,
+          test_component_names,
+          test_component_names_size,
+          &options),
       AZ_OK);
 
   char mqtt_topic_buf[TEST_SPAN_BUFFER_SIZE];
@@ -334,7 +412,14 @@ static void test_az_iot_pnp_client_get_user_name_with_model_id_small_buffer_fail
   options.model_id = AZ_SPAN_FROM_STR(TEST_MODEL_ID);
 
   assert_int_equal(
-      az_iot_pnp_client_init(&client, test_hub_hostname, test_device_id, test_model_id, &options),
+      az_iot_pnp_client_init(
+          &client,
+          test_hub_hostname,
+          test_device_id,
+          test_model_id,
+          test_component_names,
+          test_component_names_size,
+          &options),
       AZ_OK);
 
   char mqtt_topic_buf[sizeof(test_correct_user_name_with_model_id) - 2];
@@ -356,7 +441,14 @@ static void test_az_iot_pnp_client_get_user_name_with_model_id_user_options_succ
   options.module_id = AZ_SPAN_FROM_STR(TEST_MODULE_ID);
   options.user_agent = AZ_SPAN_FROM_STR(TEST_USER_AGENT);
   assert_int_equal(
-      az_iot_pnp_client_init(&client, test_hub_hostname, test_device_id, test_model_id, &options),
+      az_iot_pnp_client_init(
+          &client,
+          test_hub_hostname,
+          test_device_id,
+          test_model_id,
+          test_component_names,
+          test_component_names_size,
+          &options),
       AZ_OK);
 
   char mqtt_topic_buf[TEST_SPAN_BUFFER_SIZE];
@@ -381,7 +473,14 @@ static void test_az_iot_pnp_client_get_user_name_with_model_id_user_options_smal
   options.module_id = AZ_SPAN_FROM_STR(TEST_MODULE_ID);
   options.user_agent = AZ_SPAN_FROM_STR(TEST_USER_AGENT);
   assert_int_equal(
-      az_iot_pnp_client_init(&client, test_hub_hostname, test_device_id, test_model_id, &options),
+      az_iot_pnp_client_init(
+          &client,
+          test_hub_hostname,
+          test_device_id,
+          test_model_id,
+          test_component_names,
+          test_component_names_size,
+          &options),
       AZ_OK);
 
   char mqtt_topic_buf[sizeof(test_correct_user_name_with_model_id_with_module_id) - 2];
@@ -399,7 +498,14 @@ static void test_az_iot_pnp_client_get_client_id_succeed(void** state)
 
   az_iot_pnp_client client;
   assert_int_equal(
-      az_iot_pnp_client_init(&client, test_hub_hostname, test_device_id, test_model_id, NULL),
+      az_iot_pnp_client_init(
+          &client,
+          test_hub_hostname,
+          test_device_id,
+          test_model_id,
+          test_component_names,
+          test_component_names_size,
+          NULL),
       AZ_OK);
 
   char mqtt_topic_buf[TEST_SPAN_BUFFER_SIZE];
@@ -419,7 +525,14 @@ static void test_az_iot_pnp_client_get_client_id_small_buffer_fail(void** state)
 
   az_iot_pnp_client client;
   assert_int_equal(
-      az_iot_pnp_client_init(&client, test_hub_hostname, test_device_id, test_model_id, NULL),
+      az_iot_pnp_client_init(
+          &client,
+          test_hub_hostname,
+          test_device_id,
+          test_model_id,
+          test_component_names,
+          test_component_names_size,
+          NULL),
       AZ_OK);
 
   char mqtt_topic_buf[sizeof(test_correct_client_id) - 2];
@@ -439,7 +552,14 @@ static void test_az_iot_pnp_client_get_client_id_module_succeed(void** state)
   az_iot_pnp_client_options options = az_iot_pnp_client_options_default();
   options.module_id = AZ_SPAN_FROM_STR(TEST_MODULE_ID);
   assert_int_equal(
-      az_iot_pnp_client_init(&client, test_hub_hostname, test_device_id, test_model_id, &options),
+      az_iot_pnp_client_init(
+          &client,
+          test_hub_hostname,
+          test_device_id,
+          test_model_id,
+          test_component_names,
+          test_component_names_size,
+          &options),
       AZ_OK);
 
   char mqtt_topic_buf[TEST_SPAN_BUFFER_SIZE];
@@ -461,7 +581,14 @@ static void test_az_iot_pnp_client_get_client_id_module_small_buffer_fail(void**
   az_iot_pnp_client_options options = az_iot_pnp_client_options_default();
   options.module_id = AZ_SPAN_FROM_STR(TEST_MODULE_ID);
   assert_int_equal(
-      az_iot_pnp_client_init(&client, test_hub_hostname, test_device_id, test_model_id, &options),
+      az_iot_pnp_client_init(
+          &client,
+          test_hub_hostname,
+          test_device_id,
+          test_model_id,
+          test_component_names,
+          test_component_names_size,
+          &options),
       AZ_OK);
 
   char mqtt_topic_buf[sizeof(test_correct_client_id_with_module_id) - 2];
