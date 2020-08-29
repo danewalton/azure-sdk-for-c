@@ -43,6 +43,8 @@ typedef struct
   struct
   {
     az_iot_hub_client iot_hub_client;
+    az_span** component_names;
+    int32_t component_names_size;
     az_iot_pnp_client_options options;
   } _internal;
 } az_iot_pnp_client;
@@ -71,6 +73,8 @@ AZ_NODISCARD az_result az_iot_pnp_client_init(
     az_span iot_hub_hostname,
     az_span device_id,
     az_span model_id,
+    az_span* components[],
+    int32_t components_size,
     az_iot_pnp_client_options const* options);
 
 /**
