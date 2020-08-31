@@ -57,16 +57,17 @@ static const char test_correct_twin_patch_pub_topic[]
     "prop_two": "string"
   },
   "component_two": {
-    "prop_three": 45.6,
+    "prop_three": 45,
     "prop_four": "string"
   },
-  "not_component": 42
+  "not_component": 42,
+  "$version": 5
 }
 
 */
-// static const az_span test_twin_payload = AZ_SPAN_LITERAL_FROM_STR(
-//     "{\"component_one\":{\"prop_one\":1,\"prop_two\":\"string\"},\"component_two\":{\"prop_three\":"
-//     "45.6,\"prop_four\":\"string\"},\"not_component\":42}");
+static const az_span test_twin_payload = AZ_SPAN_LITERAL_FROM_STR(
+    "{\"component_one\":{\"prop_one\":1,\"prop_two\":\"string\"},\"component_two\":{\"prop_three\":"
+    "45,\"prop_four\":\"string\"},\"not_component\":42,\"$version\":5}");
 
 #ifndef AZ_NO_PRECONDITION_CHECKING
 ENABLE_PRECONDITION_CHECK_TESTS()
@@ -358,16 +359,6 @@ static void test_az_iot_pnp_client_twin_property_end_component_NULL_component_na
   ASSERT_PRECONDITION_CHECKED(
       az_iot_pnp_client_twin_property_end_component(&client, &jw, AZ_SPAN_NULL));
 }
-
-// static void test_az_iot_pnp_client_twin_property_read_NULL_client_fail()
-// {
-//   az_json_reader jr;
-//   az_json_token component;
-//   az_json_token name;
-//   az_json_reader value;
-//   ASSERT_PRECONDITION_CHECKED(
-//       az_iot_pnp_client_twin_property_read(NULL, &jr, &component, &name, &value));
-// }
 
 #endif // AZ_NO_PRECONDITION_CHECKING
 
@@ -711,6 +702,93 @@ static void test_az_iot_pnp_client_twin_logging_succeed()
   az_log_set_classifications(NULL);
 }
 
+static void test_az_iot_pnp_client_twin_get_next_component_succeed()
+{
+  az_iot_pnp_client client;
+  assert_int_equal(
+      az_iot_pnp_client_init(
+          &client,
+          test_device_hostname,
+          test_device_id,
+          test_model_id,
+          test_component_names,
+          test_component_names_size,
+          NULL),
+      AZ_OK);
+
+  az_json_reader jr;
+  assert_int_equal(az_json_reader_init(&jr, test_twin_payload, NULL), AZ_OK);
+
+  az_json_token component_name;
+  az_json_token property_name;
+  az_json_reader property_value;
+  int32_t value;
+  // First component
+  assert_int_equal(
+      az_iot_pnp_client_twin_get_next_component(&client, &jr, true, &component_name), AZ_OK);
+  assert_true(az_json_token_is_text_equal(&component_name, test_component_one));
+
+  assert_int_equal(
+      az_iot_pnp_client_twin_get_next_component_property(
+          &client, &jr, &property_name, &property_value),
+      AZ_OK);
+  assert_true(az_json_token_is_text_equal(&property_name, AZ_SPAN_FROM_STR("prop_one")));
+  assert_int_equal(az_json_token_get_int32(&property_value.token, &value), AZ_OK);
+  assert_int_equal(value, 1);
+
+  assert_int_equal(
+      az_iot_pnp_client_twin_get_next_component_property(
+          &client, &jr, &property_name, &property_value),
+      AZ_OK);
+  assert_true(az_json_token_is_text_equal(&property_name, AZ_SPAN_FROM_STR("prop_two")));
+  assert_true(az_json_token_is_text_equal(&property_value.token, AZ_SPAN_FROM_STR("string")));
+  assert_int_equal(
+      az_iot_pnp_client_twin_get_next_component_property(
+          &client, &jr, &property_name, &property_value),
+      AZ_ERROR_IOT_END_OF_PROPERTIES);
+
+  // Second component
+  assert_int_equal(
+      az_iot_pnp_client_twin_get_next_component(&client, &jr, true, &component_name), AZ_OK);
+  assert_true(az_json_token_is_text_equal(&component_name, test_component_two));
+
+  assert_int_equal(
+      az_iot_pnp_client_twin_get_next_component_property(
+          &client, &jr, &property_name, &property_value),
+      AZ_OK);
+  assert_true(az_json_token_is_text_equal(&property_name, AZ_SPAN_FROM_STR("prop_three")));
+  assert_int_equal(az_json_token_get_int32(&property_value.token, &value), AZ_OK);
+  assert_int_equal(value, 45);
+
+  assert_int_equal(
+      az_iot_pnp_client_twin_get_next_component_property(
+          &client, &jr, &property_name, &property_value),
+      AZ_OK);
+  assert_true(az_json_token_is_text_equal(&property_name, AZ_SPAN_FROM_STR("prop_four")));
+  assert_true(az_json_token_is_text_equal(&property_value.token, AZ_SPAN_FROM_STR("string")));
+  assert_int_equal(
+      az_iot_pnp_client_twin_get_next_component_property(
+          &client, &jr, &property_name, &property_value),
+      AZ_ERROR_IOT_END_OF_PROPERTIES);
+
+  // Not a component
+  assert_int_equal(
+      az_iot_pnp_client_twin_get_next_component(&client, &jr, true, &component_name),
+      AZ_ERROR_IOT_ITEM_NOT_COMPONENT);
+  assert_int_equal(
+      az_iot_pnp_client_twin_get_next_component_property(
+          &client, &jr, &property_name, &property_value),
+      AZ_OK);
+  assert_true(az_json_token_is_text_equal(&property_name, AZ_SPAN_FROM_STR("not_component")));
+  assert_int_equal(az_json_token_get_int32(&property_value.token, &value), AZ_OK);
+  assert_int_equal(value, 42);
+
+  // End of components (skipping version)
+  assert_int_equal(
+      az_iot_pnp_client_twin_get_next_component(&client, &jr, true, &component_name),
+      AZ_ERROR_IOT_END_OF_COMPONENTS);
+}
+
 #ifdef _MSC_VER
 // warning C4113: 'void (__cdecl *)()' differs in parameter lists from 'CMUnitTestFunction'
 #pragma warning(disable : 4113)
@@ -742,7 +820,7 @@ int test_az_iot_pnp_client_twin()
     cmocka_unit_test(test_az_iot_pnp_client_twin_property_end_component_NULL_client_fails),
     cmocka_unit_test(test_az_iot_pnp_client_twin_property_end_component_NULL_jw_fails),
     cmocka_unit_test(test_az_iot_pnp_client_twin_property_end_component_NULL_component_name_fails),
-  // cmocka_unit_test(test_az_iot_pnp_client_twin_property_read_NULL_client_fail),
+  // cmocka_unit_test(test_az_iot_pnp_client_twin_get_next_component_NULL_client_fail),
 #endif // AZ_NO_PRECONDITION_CHECKING
     cmocka_unit_test(test_az_iot_pnp_client_twin_document_get_publish_topic_succeed),
     cmocka_unit_test(test_az_iot_pnp_client_twin_document_get_publish_topic_small_buffer_fails),
@@ -757,6 +835,7 @@ int test_az_iot_pnp_client_twin()
     cmocka_unit_test(test_az_iot_pnp_client_twin_property_begin_component_succeed),
     cmocka_unit_test(test_az_iot_pnp_client_twin_property_end_component_succeed),
     cmocka_unit_test(test_az_iot_pnp_client_twin_property_end_component_with_user_data_succeed),
+    cmocka_unit_test(test_az_iot_pnp_client_twin_get_next_component_succeed),
   };
 
   return cmocka_run_group_tests_name("az_iot_pnp_client_twin", tests, NULL, NULL);
