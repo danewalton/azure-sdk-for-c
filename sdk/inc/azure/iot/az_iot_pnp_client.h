@@ -475,29 +475,42 @@ AZ_NODISCARD az_result az_iot_pnp_client_twin_property_end_component(
     az_span component_name);
 
 /**
+ * @brief Read and return the next IoT Plug and Play twin properties component
+ *
+ * @param[in] client The #az_iot_pnp_client to use for this call.
+ * @param[in] json_reader The #az_json_reader to parse through.
+ * @param[in] is_partial The boolean representing whether the twin document is from a partial update (PATCH) or a full twin document (GET).
+ * @param[out] out_component_name The #az_json_token* representing the value of the component.
+ *
+ * @return #az_result
+ * @retval #AZ_OK If the function found a component name.
+ * @retval #AZ_ERROR_IOT_ITEM_NOT_COMPONENT If the next value is not a component name.
+ * @retval #AZ_ERROR_IOT_END_OF_COMPONENTS If there are no more components to iterate over.
+ */
+AZ_NODISCARD az_result az_iot_pnp_client_twin_get_next_component(
+    az_iot_pnp_client const* client,
+    az_json_reader* json_reader,
+    bool is_partial,
+    az_json_token* out_component_name);
+
+/**
  * @brief Read the IoT Plug and Play twin properties component by component
  *
  * @param[in] client The #az_iot_pnp_client to use for this call.
  * @param[in] json_reader The #az_json_reader to parse through.
- * @param[in/out] ref_component_name The #az_json_token* which is changed only if a new component
- * name is found.
+ * @param[out] out_property_name The #az_json_token* representing the name of the property.
  * @param[out] out_property_value The #az_json_reader* representing the value of the property.
  *
  * @return #az_result
+ * @retval #AZ_OK If the function returned a valid property name and value.
+ * @retval #AZ_ERROR_IOT_END_OF_PROPERTIES If there are no more properties left for the component.
  */
-AZ_NODISCARD az_result az_iot_pnp_client_twin_property_read(
+AZ_NODISCARD az_result az_iot_pnp_client_twin_get_next_component_property(
     az_iot_pnp_client const* client,
     az_json_reader* json_reader,
-    az_json_token* ref_component_name,
     az_json_token* out_property_name,
     az_json_reader* out_property_value);
-// This could function like the one for the Azure SDK for C if the ref_component_name is effectively
-// a ref_component_name. The user would have to pass an empty span pointer at which point the first
-// component would populate the span. The user would have to pass back the pointer to us and we
-// would change it only if the component changes. The ref_component_name would be set each time it
-// hits an "end object" since each sub-object would be passed to the user as a json_reader. IE, in
-// our land, level one would be a component name and level two is any properties and their values.
-// Therefore is we kick out of a level,
+
 
 #include <azure/core/_az_cfg_suffix.h>
 

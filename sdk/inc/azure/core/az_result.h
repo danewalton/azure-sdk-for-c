@@ -133,6 +133,12 @@ typedef enum
 
   /// While iterating, there are no more properties to return.
   AZ_ERROR_IOT_END_OF_PROPERTIES = _az_RESULT_MAKE_ERROR(_az_FACILITY_IOT, 2),
+
+  // The next value is not a component
+  AZ_ERROR_IOT_ITEM_NOT_COMPONENT = _az_RESULT_MAKE_ERROR(_az_FACILITY_IOT, 3),
+
+  // The next value is not a component
+  AZ_ERROR_IOT_END_OF_COMPONENTS = _az_RESULT_MAKE_ERROR(_az_FACILITY_IOT, 3),
 } az_result;
 
 /**
