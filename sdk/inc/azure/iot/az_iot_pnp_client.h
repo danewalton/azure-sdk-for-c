@@ -334,13 +334,13 @@ AZ_NODISCARD AZ_INLINE az_result az_iot_pnp_client_commands_response_get_publish
  * @brief The MQTT topic filter to subscribe to twin operation responses.
  * @remark Twin MQTT Publish messages will have QoS At most once (0).
  */
-#define AZ_IOT_HUB_CLIENT_TWIN_RESPONSE_SUBSCRIBE_TOPIC "$iothub/twin/res/#"
+#define AZ_IOT_PNP_CLIENT_TWIN_RESPONSE_SUBSCRIBE_TOPIC "$iothub/twin/res/#"
 
 /**
  * @brief Gets the MQTT topic filter to subscribe to twin desired property changes.
  * @remark Twin MQTT Publish messages will have QoS At most once (0).
  */
-#define AZ_IOT_HUB_CLIENT_TWIN_PATCH_SUBSCRIBE_TOPIC "$iothub/twin/PATCH/properties/desired/#"
+#define AZ_IOT_PNP_CLIENT_TWIN_PATCH_SUBSCRIBE_TOPIC "$iothub/twin/PATCH/properties/desired/#"
 
 /**
  * @brief Twin response type.

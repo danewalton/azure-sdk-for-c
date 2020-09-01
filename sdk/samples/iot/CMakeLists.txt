@@ -97,6 +97,7 @@ add_executable (paho_iot_hub_pnp_component_sample
 target_link_libraries(paho_iot_hub_pnp_component_sample
   PRIVATE
     az::iot::sample::common
+    az::iot::pnp
 )
 
 target_include_directories(paho_iot_hub_pnp_component_sample
