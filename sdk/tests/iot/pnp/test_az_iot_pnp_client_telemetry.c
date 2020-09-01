@@ -138,7 +138,7 @@ static void test_az_iot_pnp_client_telemetry_get_publish_topic_no_comp_no_option
 
   assert_true(
       az_iot_pnp_client_telemetry_get_publish_topic(
-          &client, AZ_SPAN_NULL, NULL, test_buf, sizeof(test_buf), &test_length)
+          &client, AZ_SPAN_EMPTY, NULL, test_buf, sizeof(test_buf), &test_length)
       == AZ_OK);
   assert_string_equal(g_test_correct_topic_no_comp_no_options_no_props, test_buf);
   assert_int_equal(sizeof(g_test_correct_topic_no_comp_no_options_no_props) - 1, test_length);
@@ -236,7 +236,7 @@ test_az_iot_pnp_client_telemetry_get_publish_topic_no_comp_with_options_with_pro
 
   assert_true(
       az_iot_pnp_client_telemetry_get_publish_topic(
-          &client, AZ_SPAN_NULL, &props, test_buf, sizeof(test_buf), &test_length)
+          &client, AZ_SPAN_EMPTY, &props, test_buf, sizeof(test_buf), &test_length)
       == AZ_OK);
 
   assert_string_equal(g_test_correct_topic_no_comp_with_options_with_props, test_buf);

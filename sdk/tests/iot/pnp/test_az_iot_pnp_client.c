@@ -77,7 +77,7 @@ static void test_az_iot_pnp_client_init_NULL_device_id_fails(void** state)
   ASSERT_PRECONDITION_CHECKED(az_iot_pnp_client_init(
       &client,
       test_hub_hostname,
-      AZ_SPAN_NULL,
+      AZ_SPAN_EMPTY,
       test_model_id,
       test_component_names,
       test_component_names_size,
@@ -94,7 +94,7 @@ static void test_az_iot_pnp_client_init_NULL_model_id_fails(void** state)
       &client,
       test_hub_hostname,
       test_device_id,
-      AZ_SPAN_NULL,
+      AZ_SPAN_EMPTY,
       test_component_names,
       test_component_names_size,
       NULL));
@@ -108,7 +108,7 @@ static void test_az_iot_pnp_client_init_NULL_hub_hostname_id_fails(void** state)
 
   ASSERT_PRECONDITION_CHECKED(az_iot_pnp_client_init(
       &client,
-      AZ_SPAN_NULL,
+      AZ_SPAN_EMPTY,
       test_device_id,
       test_model_id,
       test_component_names,
@@ -193,7 +193,7 @@ static void test_az_iot_pnp_client_get_default_options_succeed(void** state)
   (void)state;
 
   az_iot_pnp_client_options options = az_iot_pnp_client_options_default();
-  assert_true(az_span_is_content_equal(options.module_id, AZ_SPAN_NULL));
+  assert_true(az_span_is_content_equal(options.module_id, AZ_SPAN_EMPTY));
   assert_true(
       az_span_is_content_equal(options.user_agent, az_span_create_from_str(PLATFORM_USER_AGENT)));
 }
