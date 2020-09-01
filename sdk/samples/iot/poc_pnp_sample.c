@@ -12,6 +12,12 @@ az_iot_pnp_client pnp_client;
 int32_t max_temp;
 int32_t max_elevation;
 
+static const az_span thermostat_1_name = AZ_SPAN_LITERAL_FROM_STR("thermostat1");
+static const az_span thermostat_2_name = AZ_SPAN_LITERAL_FROM_STR("thermostat2");
+static const az_span device_info_name = AZ_SPAN_LITERAL_FROM_STR("deviceInformation");
+static const az_span* pnp_components[]
+    = { &thermostat_1_name, &thermostat_2_name, &device_info_name };
+
 //
 // Functions
 //
@@ -75,32 +81,39 @@ static void handle_device_twin_message(
     int32_t version_num;
 
     az_json_reader jr;
-    az_span component_name;
+    az_json_token component_name;
     az_json_token property_name;
     az_json_reader property_value;
     az_json_reader_init(&jr, twin_message_span, NULL);
 
-    while(az_succeeded(az_iot_pnp_client_twin_property_read(&pnp_client, &jr, &component_name, &property_name, &property_value)))
+    az_result result;
+    while ((result = az_iot_pnp_client_twin_get_next_component(
+                &pnp_client, &jr, !is_twin_get, &component_name))
+               == AZ_OK
+           || (result == AZ_ERROR_IOT_ITEM_NOT_COMPONENT))
     {
-      if (az_json_token_is_text_equal(&component_name, AZ_SPAN_FROM_STR("component_one")))
+      if (result == AZ_OK)
       {
-        if (az_json_token_is_text_equal(&property_name, AZ_SPAN_FROM_STR("max_temp")))
+        az_iot_pnp_client_twin_get_next_component_property(
+            &pnp_client, &jr, &property_name, &property_value);
+        if (az_json_token_is_text_equal(&component_name, thermostat_1_name))
         {
-          az_result result = az_json_token_get_int32(&property_value, &max_temp);
+          thermostat_process_property_update(component_name, property_name, &property_value);
+        }
+        else if (az_json_token_is_text_equal(&component_name, thermostat_2_name))
+        {
+          thermostat_process_property_update(component_name, property_name, &property_value);
+        }
+        else if (az_json_token_is_text_equal(&component_name, device_info_name))
+        {
+          device_info_process_property_update(component_name, property_name, &property_value);
         }
       }
-      else if (az_json_token_is_text_equal(&component_name, AZ_SPAN_FROM_STR("component_two")))
+      else if (result == AZ_ERROR_IOT_ITEM_NOT_COMPONENT)
       {
-        if (az_json_token_is_text_equal(&property_name, AZ_SPAN_FROM_STR("max_elevation")))
-        {
-          az_result result = az_json_token_get_int32(&property_value, &max_elevation);
-        }
+        az_iot_pnp_client_twin_get_next_component_property(
+            &pnp_client, &jr, &property_name, &property_value);
       }
-      else
-      {
-        //Is some non component | handle accordingly
-      }
-      
     }
   }
 }
