@@ -106,7 +106,7 @@ static void handle_device_twin_message(
         }
         else if (az_json_token_is_text_equal(&component_name, device_info_name))
         {
-          device_info_process_property_update(component_name, property_name, &property_value);
+          //device_info_process_property_update(component_name, property_name, &property_value);
         }
       }
       else if (result == AZ_ERROR_IOT_ITEM_NOT_COMPONENT)
