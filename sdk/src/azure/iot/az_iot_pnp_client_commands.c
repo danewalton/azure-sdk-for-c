@@ -71,7 +71,7 @@ AZ_NODISCARD az_result az_iot_pnp_client_commands_parse_received_topic(
   }
   else
   {
-    out_request->component = AZ_SPAN_NULL;
+    out_request->component = AZ_SPAN_EMPTY;
     out_request->name = az_span_slice(received_topic, 0, index);
   }
 

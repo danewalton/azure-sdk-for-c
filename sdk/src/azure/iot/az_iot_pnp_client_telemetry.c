@@ -7,6 +7,7 @@
 #include <azure/core/az_result.h>
 #include <azure/core/az_span.h>
 #include <azure/core/internal/az_precondition_internal.h>
+#include <azure/core/internal/az_result_internal.h>
 #include <azure/iot/az_iot_hub_client.h>
 #include <azure/iot/az_iot_pnp_client.h>
 
@@ -36,15 +37,15 @@ AZ_NODISCARD az_result az_iot_pnp_client_telemetry_get_publish_topic(
     {
       properties = &pnp_properties;
 
-      AZ_RETURN_IF_FAILED(az_iot_message_properties_init(
+      _az_RETURN_IF_FAILED(az_iot_message_properties_init(
           properties, AZ_SPAN_FROM_BUFFER(pnp_properties_buffer), 0));
     }
 
-    AZ_RETURN_IF_FAILED(az_iot_message_properties_append(
+    _az_RETURN_IF_FAILED(az_iot_message_properties_append(
         properties, component_telemetry_prop_span, component_name));
   }
 
-  AZ_RETURN_IF_FAILED(az_iot_hub_client_telemetry_get_publish_topic(
+  _az_RETURN_IF_FAILED(az_iot_hub_client_telemetry_get_publish_topic(
       &client->_internal.iot_hub_client,
       properties,
       mqtt_topic,

@@ -200,8 +200,8 @@ AZ_NODISCARD AZ_INLINE az_result az_iot_pnp_client_get_sas_signature(
  */
 AZ_NODISCARD AZ_INLINE az_result az_iot_pnp_client_get_sas_password(
     az_iot_pnp_client const* client,
+    uint64_t token_expiration_epoch_time,
     az_span base64_hmac_sha256_signature,
-    uint32_t token_expiration_epoch_time,
     az_span key_name,
     char* mqtt_password,
     size_t mqtt_password_size,
@@ -209,8 +209,8 @@ AZ_NODISCARD AZ_INLINE az_result az_iot_pnp_client_get_sas_password(
 {
   return az_iot_hub_client_sas_get_password(
       &client->_internal.iot_hub_client,
-      base64_hmac_sha256_signature,
       token_expiration_epoch_time,
+      base64_hmac_sha256_signature,
       key_name,
       mqtt_password,
       mqtt_password_size,
@@ -273,7 +273,7 @@ typedef struct
       request_id; /**< The request id.
                    * @note The application must match the command request and command response. */
   az_span component; /**< The name of the component which the command was invoked for.
-                      * @note Can be `AZ_SPAN_NULL` if for the root component */
+                      * @note Can be `AZ_SPAN_EMPTY` if for the root component */
   az_span name; /**< The command name. */
 } az_iot_pnp_client_command_request;
 

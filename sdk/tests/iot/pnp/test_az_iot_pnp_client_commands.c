@@ -140,7 +140,7 @@ test_az_iot_pnp_client_commands_response_get_publish_topic_AZ_SPAN_NULL_request_
           NULL)
       == AZ_OK);
 
-  az_span request_id = AZ_SPAN_NULL;
+  az_span request_id = AZ_SPAN_EMPTY;
   uint16_t status = 200;
 
   ASSERT_PRECONDITION_CHECKED(az_iot_pnp_client_commands_response_get_publish_topic(
@@ -193,7 +193,7 @@ static void test_az_iot_pnp_client_commands_parse_received_topic_AZ_SPAN_NULL_re
           NULL)
       == AZ_OK);
 
-  az_span received_topic = AZ_SPAN_NULL;
+  az_span received_topic = AZ_SPAN_EMPTY;
 
   az_iot_pnp_client_command_request out_request;
 

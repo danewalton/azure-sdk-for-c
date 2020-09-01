@@ -4,6 +4,7 @@
 #include <azure/iot/az_iot_pnp_client.h>
 
 #include <azure/core/internal/az_precondition_internal.h>
+#include <azure/core/internal/az_result_internal.h>
 
 static const az_span iot_hub_twin_desired = AZ_SPAN_LITERAL_FROM_STR("desired");
 static const az_span iot_hub_twin_desired_version = AZ_SPAN_LITERAL_FROM_STR("$version");
@@ -20,7 +21,7 @@ AZ_NODISCARD az_result az_iot_pnp_client_twin_parse_received_topic(
   _az_PRECONDITION_NOT_NULL(out_twin_response);
 
   az_iot_hub_client_twin_response hub_twin_response;
-  AZ_RETURN_IF_FAILED(az_iot_hub_client_twin_parse_received_topic(
+  _az_RETURN_IF_FAILED(az_iot_hub_client_twin_parse_received_topic(
       &client->_internal.iot_hub_client, received_topic, &hub_twin_response));
 
   out_twin_response->request_id = hub_twin_response.request_id;
@@ -42,11 +43,11 @@ AZ_NODISCARD az_result az_iot_pnp_client_twin_property_begin_component(
 
   (void)client;
 
-  AZ_RETURN_IF_FAILED(az_json_writer_append_property_name(json_writer, component_name));
-  AZ_RETURN_IF_FAILED(az_json_writer_append_begin_object(json_writer));
-  AZ_RETURN_IF_FAILED(
+  _az_RETURN_IF_FAILED(az_json_writer_append_property_name(json_writer, component_name));
+  _az_RETURN_IF_FAILED(az_json_writer_append_begin_object(json_writer));
+  _az_RETURN_IF_FAILED(
       az_json_writer_append_property_name(json_writer, component_property_label_name));
-  AZ_RETURN_IF_FAILED(az_json_writer_append_string(json_writer, component_property_label_value));
+  _az_RETURN_IF_FAILED(az_json_writer_append_string(json_writer, component_property_label_value));
 
   return AZ_OK;
 }
@@ -214,7 +215,7 @@ AZ_NODISCARD az_result az_iot_pnp_client_twin_get_next_component(
     return AZ_ERROR_IOT_ITEM_NOT_COMPONENT;
   }
 
-  AZ_RETURN_IF_FAILED(az_json_reader_next_token(json_reader));
+  _az_RETURN_IF_FAILED(az_json_reader_next_token(json_reader));
 
   if (!is_partial && az_result_failed(json_child_token_move(json_reader, iot_hub_twin_desired)))
   {
