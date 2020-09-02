@@ -7,6 +7,7 @@
 #include <azure/core/internal/az_result_internal.h>
 
 static const az_span iot_hub_twin_desired = AZ_SPAN_LITERAL_FROM_STR("desired");
+static const az_span iot_hub_twin_reported = AZ_SPAN_LITERAL_FROM_STR("reported");
 static const az_span iot_hub_twin_desired_version = AZ_SPAN_LITERAL_FROM_STR("$version");
 static const az_span component_property_label_name = AZ_SPAN_LITERAL_FROM_STR("__t");
 static const az_span component_property_label_value = AZ_SPAN_LITERAL_FROM_STR("c");
@@ -186,13 +187,19 @@ AZ_NODISCARD az_result az_iot_pnp_client_twin_get_next_component(
   }
   else if (json_reader->token.kind == AZ_JSON_TOKEN_PROPERTY_NAME)
   {
-    if (az_json_token_is_text_equal(&(json_reader->token), iot_hub_twin_desired_version))
+    // Skip version if match
+    if (az_json_token_is_text_equal(&json_reader->token, iot_hub_twin_desired_version))
     {
       if (az_result_failed(az_json_reader_next_token(json_reader))
           || (az_result_failed(az_json_reader_next_token(json_reader))))
       {
         return AZ_ERROR_UNEXPECTED_CHAR;
       }
+    }
+    // At the end of get payload "desired" section
+    if (!is_partial && az_json_token_is_text_equal(&(json_reader->token), iot_hub_twin_reported))
+    {
+      return AZ_ERROR_IOT_END_OF_COMPONENTS;
     }
 
     // End of components
@@ -212,7 +219,10 @@ AZ_NODISCARD az_result az_iot_pnp_client_twin_get_next_component(
       }
       return AZ_OK;
     }
-    return AZ_ERROR_IOT_ITEM_NOT_COMPONENT;
+    else
+    {
+      return AZ_ERROR_IOT_ITEM_NOT_COMPONENT;
+    }
   }
 
   _az_RETURN_IF_FAILED(az_json_reader_next_token(json_reader));

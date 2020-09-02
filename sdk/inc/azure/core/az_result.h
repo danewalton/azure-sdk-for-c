@@ -137,7 +137,7 @@ typedef enum
   AZ_ERROR_IOT_ITEM_NOT_COMPONENT = _az_RESULT_MAKE_ERROR(_az_FACILITY_IOT, 3),
 
   // The next value is not a component
-  AZ_ERROR_IOT_END_OF_COMPONENTS = _az_RESULT_MAKE_ERROR(_az_FACILITY_IOT, 3),
+  AZ_ERROR_IOT_END_OF_COMPONENTS = _az_RESULT_MAKE_ERROR(_az_FACILITY_IOT, 4),
 } az_result;
 
 /**

@@ -50,6 +50,26 @@ static const char test_correct_twin_patch_pub_topic[]
     = "$iothub/twin/PATCH/properties/reported/?$rid=id_one";
 
 /*
+EXAMPLE OF WHY SPLITTING INTO TWO APIS
+{
+  "component_one": {
+    "prop_one": {
+      "component_one": "thing_two"
+    },
+    "prop_two": "string"
+  },
+  "component_two": {
+    "prop_three": 45,
+    "prop_four": "string"
+  },
+  "not_component": 42,
+  "$version": 5
+}
+
+*/
+
+
+/*
 
 {
   "component_one": {
@@ -68,6 +88,47 @@ static const char test_correct_twin_patch_pub_topic[]
 static const az_span test_twin_payload = AZ_SPAN_LITERAL_FROM_STR(
     "{\"component_one\":{\"prop_one\":1,\"prop_two\":\"string\"},\"component_two\":{\"prop_three\":"
     "45,\"prop_four\":\"string\"},\"not_component\":42,\"$version\":5}");
+
+/*
+
+{
+  "desired": {
+    "thermostat2": {
+      "__t": "c",
+      "targetTemperature": 50
+    },
+    "thermostat1": {
+      "__t": "c",
+      "targetTemperature": 90
+    },
+    "targetTemperature": 54,
+    "$version": 30
+  },
+  "reported": {
+    "manufacturer": "Sample-Manufacturer",
+    "model": "pnp-sample-Model-123",
+    "swVersion": "1.0.0.0",
+    "osName": "Contoso",
+    "processorArchitecture": "Contoso-Arch-64bit",
+    "processorManufacturer": "Processor Manufacturer(TM)",
+    "totalStorage": 1024,
+    "totalMemory": 128
+  }
+}
+
+*/
+static const az_span test_twin_payload_long = AZ_SPAN_LITERAL_FROM_STR(
+    "{\"desired\":{\"thermostat2\":{\"__t\":\"c\",\"targetTemperature\":50},\"thermostat1\":{\"__"
+    "t\":\"c\",\"targetTemperature\":90},\"targetTemperature\":54,\"$version\":30},\"reported\":{"
+    "\"manufacturer\":\"Sample-Manufacturer\",\"model\":\"pnp-sample-Model-123\",\"swVersion\":\"1."
+    "0.0.0\",\"osName\":\"Contoso\",\"processorArchitecture\":\"Contoso-Arch-64bit\","
+    "\"processorManufacturer\":\"Processor "
+    "Manufacturer(TM)\",\"totalStorage\":1024,\"totalMemory\":128}}");
+static az_span test_temp_component_one = AZ_SPAN_LITERAL_FROM_STR("thermostat1");
+static az_span test_temp_component_two = AZ_SPAN_LITERAL_FROM_STR("thermostat2");
+static az_span* test_temp_component_names[] = { &test_temp_component_one, &test_temp_component_two };
+static const int32_t test_temp_component_names_size
+    = sizeof(test_temp_component_names) / sizeof(test_temp_component_names[0]);
 
 #ifndef AZ_NO_PRECONDITION_CHECKING
 ENABLE_PRECONDITION_CHECK_TESTS()
@@ -789,6 +850,81 @@ static void test_az_iot_pnp_client_twin_get_next_component_succeed()
       AZ_ERROR_IOT_END_OF_COMPONENTS);
 }
 
+static void test_az_iot_pnp_client_twin_get_next_component_long_succeed()
+{
+  az_iot_pnp_client client;
+  assert_int_equal(
+      az_iot_pnp_client_init(
+          &client,
+          test_device_hostname,
+          test_device_id,
+          test_model_id,
+          test_temp_component_names,
+          test_temp_component_names_size,
+          NULL),
+      AZ_OK);
+
+  az_json_reader jr;
+  assert_int_equal(az_json_reader_init(&jr, test_twin_payload_long, NULL), AZ_OK);
+
+  az_json_token component_name;
+  az_json_token property_name;
+  az_json_reader property_value;
+  int32_t value;
+  // First component
+  assert_int_equal(
+      az_iot_pnp_client_twin_get_next_component(&client, &jr, false, &component_name), AZ_OK);
+  assert_true(az_json_token_is_text_equal(&component_name, test_temp_component_two));
+
+  assert_int_equal(
+      az_iot_pnp_client_twin_get_next_component_property(
+          &client, &jr, &property_name, &property_value),
+      AZ_OK);
+  assert_true(az_json_token_is_text_equal(&property_name, AZ_SPAN_FROM_STR("targetTemperature")));
+  assert_int_equal(az_json_token_get_int32(&property_value.token, &value), AZ_OK);
+  assert_int_equal(value, 50);
+
+  assert_int_equal(
+      az_iot_pnp_client_twin_get_next_component_property(
+          &client, &jr, &property_name, &property_value),
+      AZ_ERROR_IOT_END_OF_PROPERTIES);
+
+  // Second component
+  assert_int_equal(
+      az_iot_pnp_client_twin_get_next_component(&client, &jr, true, &component_name), AZ_OK);
+  assert_true(az_json_token_is_text_equal(&component_name, test_temp_component_one));
+
+  assert_int_equal(
+      az_iot_pnp_client_twin_get_next_component_property(
+          &client, &jr, &property_name, &property_value),
+      AZ_OK);
+  assert_true(az_json_token_is_text_equal(&property_name, AZ_SPAN_FROM_STR("targetTemperature")));
+  assert_int_equal(az_json_token_get_int32(&property_value.token, &value), AZ_OK);
+  assert_int_equal(value, 90);
+
+  assert_int_equal(
+      az_iot_pnp_client_twin_get_next_component_property(
+          &client, &jr, &property_name, &property_value),
+      AZ_ERROR_IOT_END_OF_PROPERTIES);
+
+  // Not a component
+  assert_int_equal(
+      az_iot_pnp_client_twin_get_next_component(&client, &jr, true, &component_name),
+      AZ_ERROR_IOT_ITEM_NOT_COMPONENT);
+  assert_int_equal(
+      az_iot_pnp_client_twin_get_next_component_property(
+          &client, &jr, &property_name, &property_value),
+      AZ_OK);
+  assert_true(az_json_token_is_text_equal(&property_name, AZ_SPAN_FROM_STR("targetTemperature")));
+  assert_int_equal(az_json_token_get_int32(&property_value.token, &value), AZ_OK);
+  assert_int_equal(value, 54);
+
+  // End of components (skipping version and reported properties section)
+  assert_int_equal(
+      az_iot_pnp_client_twin_get_next_component(&client, &jr, true, &component_name),
+      AZ_ERROR_IOT_END_OF_COMPONENTS);
+}
+
 #ifdef _MSC_VER
 // warning C4113: 'void (__cdecl *)()' differs in parameter lists from 'CMUnitTestFunction'
 #pragma warning(disable : 4113)
@@ -836,6 +972,7 @@ int test_az_iot_pnp_client_twin()
     cmocka_unit_test(test_az_iot_pnp_client_twin_property_end_component_succeed),
     cmocka_unit_test(test_az_iot_pnp_client_twin_property_end_component_with_user_data_succeed),
     cmocka_unit_test(test_az_iot_pnp_client_twin_get_next_component_succeed),
+    cmocka_unit_test(test_az_iot_pnp_client_twin_get_next_component_long_succeed),
   };
 
   return cmocka_run_group_tests_name("az_iot_pnp_client_twin", tests, NULL, NULL);
