@@ -806,20 +806,25 @@ static void process_twin_message(az_span twin_message_span, bool is_partial)
   az_json_token component_name;
   az_json_token property_name;
   az_json_reader property_value;
-  //Figure out what to do with this
+  // Figure out what to do with this
   int32_t version = 0;
-  result = az_json_reader_init(&jr, twin_message_span, NULL);
-  while ((result = az_iot_pnp_client_twin_get_next_component(
-              &pnp_client, &jr, is_partial, &component_name))
-             == AZ_OK
-         || (result == AZ_ERROR_IOT_ITEM_NOT_COMPONENT))
+  if (az_result_failed(result = az_json_reader_init(&jr, twin_message_span, NULL)))
   {
+    IOT_SAMPLE_LOG_ERROR(
+        "Could not initialize the json reader: az_result return code 0x%08x.", result);
+    exit(result);
+  }
+  // this needs to be continuous until the return value isn't an expected one
+  while (1)
+  {
+    result
+        = az_iot_pnp_client_twin_get_next_component(&pnp_client, &jr, is_partial, &component_name);
     if (result == AZ_OK)
     {
       if (az_json_token_is_text_equal(&component_name, thermostat_1_name))
       {
-        while (az_iot_pnp_client_twin_get_next_component_property(
-                   &pnp_client, &jr, &property_name, &property_value)
+        while ((result = az_iot_pnp_client_twin_get_next_component_property(
+                    &pnp_client, &jr, &property_name, &property_value))
                == AZ_OK)
         {
           if (az_result_succeeded(
@@ -839,14 +844,14 @@ static void process_twin_message(az_span twin_message_span, bool is_partial)
             IOT_SAMPLE_LOG_AZ_SPAN("Payload:", mqtt_message.out_payload_span);
 
             // Receive the response from the server.
-            mqtt_receive_message();
+            // mqtt_receive_message();
           }
         }
       }
       else if (az_json_token_is_text_equal(&component_name, thermostat_2_name))
       {
-        while (az_iot_pnp_client_twin_get_next_component_property(
-                   &pnp_client, &jr, &property_name, &property_value)
+        while ((result = az_iot_pnp_client_twin_get_next_component_property(
+                    &pnp_client, &jr, &property_name, &property_value))
                == AZ_OK)
         {
           if (az_result_succeeded(
@@ -866,20 +871,29 @@ static void process_twin_message(az_span twin_message_span, bool is_partial)
             IOT_SAMPLE_LOG_AZ_SPAN("Payload:", mqtt_message.out_payload_span);
 
             // Receive the response from the server.
-            mqtt_receive_message();
+            // mqtt_receive_message();
           }
         }
       }
       else if (az_json_token_is_text_equal(&component_name, device_info_name))
       {
-        //device_info_process_property_update(component_name, property_name, &property_value);
+        // device_info_process_property_update(component_name, property_name, &property_value);
       }
     }
     else if (result == AZ_ERROR_IOT_ITEM_NOT_COMPONENT)
     {
-      // Usually want to call this but not in this case
-      // az_iot_pnp_client_twin_get_next_component_property(
-      //     &pnp_client, &jr, &property_name, &property_value);
+      if ((result = az_iot_pnp_client_twin_get_next_component_property(
+               &pnp_client, &jr, &property_name, &property_value))
+          == AZ_ERROR_IOT_END_OF_PROPERTIES)
+      {
+        continue;
+      }
+      else if (az_result_failed(result))
+      {
+        IOT_SAMPLE_LOG_ERROR(
+            "Failed to get non component property: az_result return code 0x%08x.", result);
+        exit(result);
+      }
       IOT_SAMPLE_LOG_ERROR(
           "Temperature Controller does not support writable property \"%.*s\". All writeable "
           "properties are on sub-components.",
@@ -929,6 +943,10 @@ static void process_twin_message(az_span twin_message_span, bool is_partial)
 
       // Receive the response from the server.
       mqtt_receive_message();
+    }
+    else if (result == AZ_ERROR_IOT_END_OF_COMPONENTS)
+    {
+      break;
     }
     else
     {
