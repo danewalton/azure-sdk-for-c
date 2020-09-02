@@ -87,11 +87,10 @@ static void handle_device_twin_message(
     az_json_reader_init(&jr, twin_message_span, NULL);
 
     az_result result;
-    while ((result = az_iot_pnp_client_twin_get_next_component(
-                &pnp_client, &jr, !is_twin_get, &component_name))
-               == AZ_OK
-           || (result == AZ_ERROR_IOT_ITEM_NOT_COMPONENT))
+    while (1)
     {
+      result = az_iot_pnp_client_twin_get_next_component(
+          &pnp_client, &jr, !is_twin_get, &component_name);
       if (result == AZ_OK)
       {
         az_iot_pnp_client_twin_get_next_component_property(
@@ -106,13 +105,21 @@ static void handle_device_twin_message(
         }
         else if (az_json_token_is_text_equal(&component_name, device_info_name))
         {
-          //device_info_process_property_update(component_name, property_name, &property_value);
+          // device_info_process_property_update(component_name, property_name, &property_value);
         }
       }
       else if (result == AZ_ERROR_IOT_ITEM_NOT_COMPONENT)
       {
         az_iot_pnp_client_twin_get_next_component_property(
             &pnp_client, &jr, &property_name, &property_value);
+      }
+      else if (result == AZ_ERROR_IOT_END_OF_COMPONENTS)
+      {
+        break;
+      }
+      else
+      {
+        return result;
       }
     }
   }
