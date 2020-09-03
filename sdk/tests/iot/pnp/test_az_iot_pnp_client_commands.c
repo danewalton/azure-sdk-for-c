@@ -414,6 +414,43 @@ static void test_az_iot_pnp_client_commands_parse_received_topic_succeed()
   assert_true(
       az_iot_pnp_client_commands_parse_received_topic(&client, received_topic, &out_request)
       == AZ_OK);
+  assert_int_equal(az_span_size(out_request.component), 0);
+  assert_ptr_equal(az_span_ptr(out_request.component), NULL);
+  assert_int_equal(az_span_size(out_request.name), _az_COUNTOF(expected_name) - 1);
+  assert_memory_equal(az_span_ptr(out_request.name), expected_name, _az_COUNTOF(expected_name) - 1);
+  assert_int_equal(az_span_size(out_request.request_id), _az_COUNTOF(expected_request_id) - 1);
+  assert_memory_equal(
+      az_span_ptr(out_request.request_id),
+      expected_request_id,
+      _az_COUNTOF(expected_request_id) - 1);
+}
+
+static void test_az_iot_pnp_client_commands_parse_received_topic_with_component_succeed()
+{
+  az_iot_pnp_client client;
+  assert_true(
+      az_iot_pnp_client_init(
+          &client,
+          test_device_hostname,
+          test_device_id,
+          test_model_id,
+          test_component_names,
+          test_component_names_size,
+          NULL)
+      == AZ_OK);
+
+  const char expected_component[] = "component_one";
+  const char expected_name[] = "TestMethod";
+  const char expected_request_id[] = "1";
+  az_span received_topic = AZ_SPAN_FROM_STR("$iothub/methods/POST/component_one*TestMethod/?$rid=1");
+
+  az_iot_pnp_client_command_request out_request;
+
+  assert_true(
+      az_iot_pnp_client_commands_parse_received_topic(&client, received_topic, &out_request)
+      == AZ_OK);
+  assert_int_equal(az_span_size(out_request.component), _az_COUNTOF(expected_component) - 1);
+  assert_memory_equal(az_span_ptr(out_request.component), expected_component, _az_COUNTOF(expected_component) - 1);
   assert_int_equal(az_span_size(out_request.name), _az_COUNTOF(expected_name) - 1);
   assert_memory_equal(az_span_ptr(out_request.name), expected_name, _az_COUNTOF(expected_name) - 1);
   assert_int_equal(az_span_size(out_request.request_id), _az_COUNTOF(expected_request_id) - 1);
@@ -634,6 +671,7 @@ int test_az_iot_pnp_client_commands()
     cmocka_unit_test(
         test_az_iot_pnp_client_commands_response_get_publish_topic_INSUFFICIENT_BUFFER_for_reqid_fail),
     cmocka_unit_test(test_az_iot_pnp_client_commands_parse_received_topic_succeed),
+    cmocka_unit_test(test_az_iot_pnp_client_commands_parse_received_topic_with_component_succeed),
     cmocka_unit_test(test_az_iot_pnp_client_commands_parse_received_topic_c2d_topic_fail),
     cmocka_unit_test(test_az_iot_pnp_client_commands_parse_received_topic_get_twin_topic_fail),
     cmocka_unit_test(test_az_iot_pnp_client_commands_parse_received_topic_twin_patch_topic_fail),
