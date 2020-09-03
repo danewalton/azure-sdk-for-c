@@ -87,10 +87,9 @@ static void handle_device_twin_message(
     az_json_reader_init(&jr, twin_message_span, NULL);
 
     az_result result;
-    while (1)
+    while (az_result_succeeded(result = az_iot_pnp_client_twin_get_next_component(
+          &pnp_client, &jr, !is_twin_get, &component_name)))
     {
-      result = az_iot_pnp_client_twin_get_next_component(
-          &pnp_client, &jr, !is_twin_get, &component_name);
       if (result == AZ_OK)
       {
         az_iot_pnp_client_twin_get_next_component_property(
