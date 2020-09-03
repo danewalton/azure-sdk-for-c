@@ -815,8 +815,9 @@ static void process_twin_message(az_span twin_message_span, bool is_partial)
     exit(result);
   }
   // this needs to be continuous until the return value isn't an expected one
-  while (az_result_succeeded(result
-        = az_iot_pnp_client_twin_get_next_component(&pnp_client, &jr, is_partial, &component_name)))
+  while (az_result_succeeded(
+      result
+      = az_iot_pnp_client_twin_get_next_component(&pnp_client, &jr, is_partial, &component_name)))
   {
     if (result == AZ_OK)
     {
@@ -914,28 +915,31 @@ static void process_twin_message(az_span twin_message_span, bool is_partial)
       }
 
       // Build the root component error reported property message.
+      az_json_writer jw;
+      result = az_json_writer_init(&jw, mqtt_message.payload_span, NULL);
+
       if (az_result_failed(
-              result = pnp_create_reported_property_with_status(
-                  mqtt_message.payload_span,
+              result = az_iot_pnp_client_twin_begin_property_with_status(
+                  &pnp_client,
+                  &jw,
                   component_name.slice,
                   property_name.slice,
-                  append_json_token_callback,
-                  (void*)&property_value,
                   AZ_IOT_STATUS_NOT_FOUND,
                   version,
-                  property_response_description_failed,
-                  &mqtt_message.out_payload_span)))
-      {
-        IOT_SAMPLE_LOG_ERROR(
-            "Failed to build Temperature Controller property error payload: az_result return "
-            "code "
-            "0x%08x.",
-            result);
-        exit(result);
-      }
+                  property_response_description_failed))
+          || az_result_failed(append_json_token(&jw, &property_value.token))
+          || az_result_failed(
+              result = az_iot_pnp_client_twin_end_property_with_status(
+                  &pnp_client,
+                  &jw,
+                  component_name.slice,
+                  property_name.slice,
+                  AZ_IOT_STATUS_NOT_FOUND,
+                  version,
+                  property_response_description_failed)))
 
-      // Send error response to the updated property.
-      mqtt_publish_message(mqtt_message.topic, mqtt_message.out_payload_span, MQTT_PUBLISH_QOS);
+        // Send error response to the updated property.
+        mqtt_publish_message(mqtt_message.topic, mqtt_message.out_payload_span, MQTT_PUBLISH_QOS);
       IOT_SAMPLE_LOG_SUCCESS(
           "Client sent Temperature Controller error status reported property message:");
       IOT_SAMPLE_LOG_AZ_SPAN("Payload:", mqtt_message.out_payload_span);
@@ -1425,7 +1429,7 @@ static az_result append_int32_callback(az_json_writer* jw, void* value)
   return az_json_writer_append_int32(jw, *(int32_t*)value);
 }
 
-static az_result append_json_token_callback(az_json_writer* jw, void* value)
+static az_result append_json_token(az_json_writer* jw, az_json_token* value)
 {
   az_json_token value_token = *(az_json_token*)value;
 
