@@ -127,18 +127,21 @@ typedef enum
   /// Generic error in the HTTP transport adapter implementation.
   AZ_ERROR_HTTP_ADAPTER = _az_RESULT_MAKE_ERROR(_az_FACILITY_HTTP, 9),
 
+  // === IoT success codes ===
+    /// While iterating, there are no more properties to return.
+  AZ_IOT_END_OF_PROPERTIES = _az_RESULT_MAKE_SUCCESS(_az_FACILITY_IOT, 0),
+
+  // The next value is not a component
+  AZ_IOT_ITEM_NOT_COMPONENT = _az_RESULT_MAKE_SUCCESS(_az_FACILITY_IOT, 1),
+
+  // The next value is not a component
+  AZ_IOT_END_OF_COMPONENTS = _az_RESULT_MAKE_SUCCESS(_az_FACILITY_IOT, 2),
+
   // === IoT error codes ===
   /// The IoT topic is not matching the expected format.
   AZ_ERROR_IOT_TOPIC_NO_MATCH = _az_RESULT_MAKE_ERROR(_az_FACILITY_IOT, 1),
 
-  /// While iterating, there are no more properties to return.
-  AZ_ERROR_IOT_END_OF_PROPERTIES = _az_RESULT_MAKE_ERROR(_az_FACILITY_IOT, 2),
 
-  // The next value is not a component
-  AZ_ERROR_IOT_ITEM_NOT_COMPONENT = _az_RESULT_MAKE_ERROR(_az_FACILITY_IOT, 3),
-
-  // The next value is not a component
-  AZ_ERROR_IOT_END_OF_COMPONENTS = _az_RESULT_MAKE_ERROR(_az_FACILITY_IOT, 4),
 } az_result;
 
 /**
