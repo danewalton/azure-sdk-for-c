@@ -815,10 +815,9 @@ static void process_twin_message(az_span twin_message_span, bool is_partial)
     exit(result);
   }
   // this needs to be continuous until the return value isn't an expected one
-  while (1)
+  while (az_result_succeeded(result
+        = az_iot_pnp_client_twin_get_next_component(&pnp_client, &jr, is_partial, &component_name)))
   {
-    result
-        = az_iot_pnp_client_twin_get_next_component(&pnp_client, &jr, is_partial, &component_name);
     if (result == AZ_OK)
     {
       if (az_json_token_is_text_equal(&component_name, thermostat_1_name))
@@ -880,11 +879,11 @@ static void process_twin_message(az_span twin_message_span, bool is_partial)
         // device_info_process_property_update(component_name, property_name, &property_value);
       }
     }
-    else if (result == AZ_ERROR_IOT_ITEM_NOT_COMPONENT)
+    else if (result == AZ_IOT_ITEM_NOT_COMPONENT)
     {
       if ((result = az_iot_pnp_client_twin_get_next_component_property(
                &pnp_client, &jr, &property_name, &property_value))
-          == AZ_ERROR_IOT_END_OF_PROPERTIES)
+          == AZ_IOT_END_OF_PROPERTIES)
       {
         continue;
       }
@@ -944,7 +943,7 @@ static void process_twin_message(az_span twin_message_span, bool is_partial)
       // Receive the response from the server.
       mqtt_receive_message();
     }
-    else if (result == AZ_ERROR_IOT_END_OF_COMPONENTS)
+    else if (result == AZ_IOT_END_OF_COMPONENTS)
     {
       break;
     }
