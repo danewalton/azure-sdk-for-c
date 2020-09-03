@@ -474,10 +474,23 @@ AZ_NODISCARD az_result az_iot_pnp_client_twin_property_end_component(
     az_json_writer* json_writer,
     az_span component_name);
 
-// AZ_NODISCARD az_result az_iot_pnp_client_twin_append_property_with_status(
-//     az_iot_pnp_client const* client,
-//     az_json_writer* json_writer,
-//     az_span component_name);
+AZ_NODISCARD az_result az_iot_pnp_client_twin_begin_property_with_status(
+    az_iot_pnp_client const* client,
+    az_json_writer* json_writer,
+    az_span component_name,
+    az_span property_name,
+    int32_t ack_code,
+    int32_t ack_version,
+    az_span ack_description);
+
+AZ_NODISCARD az_result az_iot_pnp_client_twin_end_property_with_status(
+    az_iot_pnp_client const* client,
+    az_json_writer* json_writer,
+    az_span component_name,
+    az_span property_name,
+    int32_t ack_code,
+    int32_t ack_version,
+    az_span ack_description);
 
 /**
  * @brief Read and return the next IoT Plug and Play twin properties component
