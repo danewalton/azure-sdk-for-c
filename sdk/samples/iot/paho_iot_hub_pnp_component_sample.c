@@ -843,7 +843,7 @@ static void process_twin_message(az_span twin_message_span, bool is_partial)
             IOT_SAMPLE_LOG_AZ_SPAN("Payload:", mqtt_message.out_payload_span);
 
             // Receive the response from the server.
-            // mqtt_receive_message();
+            mqtt_receive_message();
           }
         }
       }
@@ -870,7 +870,7 @@ static void process_twin_message(az_span twin_message_span, bool is_partial)
             IOT_SAMPLE_LOG_AZ_SPAN("Payload:", mqtt_message.out_payload_span);
 
             // Receive the response from the server.
-            // mqtt_receive_message();
+            mqtt_receive_message();
           }
         }
       }
