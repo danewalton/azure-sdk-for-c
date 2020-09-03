@@ -474,6 +474,23 @@ AZ_NODISCARD az_result az_iot_pnp_client_twin_property_end_component(
     az_json_writer* json_writer,
     az_span component_name);
 
+/**
+ * @brief Begin a property response payload with status
+ *
+ * @param[in] client The #az_iot_pnp_client to use for this call.
+ * @param[in] json_writer The initialized #az_json_writer to append data to.
+ * @param[in] component_name The name of the component to use with this property payload. If this is
+ * for a root or non-component, this can be #AZ_SPAN_EMPTY.
+ * @param[in] property_name The name of the property to build a response payload for.
+ * @param[in] ack_code The HTTP-like status code to respond with. Please see #az_iot_status for
+ * possible supported values.
+ * @param[in] ack_version The version of the property the application is acknowledging.
+ * @param[in] ack_description The optional description detailing the context or any details about
+ * the acknowledgement.
+ * 
+ * @return #az_result
+ *
+ */
 AZ_NODISCARD az_result az_iot_pnp_client_twin_begin_property_with_status(
     az_iot_pnp_client const* client,
     az_json_writer* json_writer,
@@ -483,6 +500,22 @@ AZ_NODISCARD az_result az_iot_pnp_client_twin_begin_property_with_status(
     int32_t ack_version,
     az_span ack_description);
 
+/**
+ * @brief End a property response payload with status
+ *
+ * @param[in] client The #az_iot_pnp_client to use for this call.
+ * @param[in] json_writer The initialized #az_json_writer to append data to.
+ * @param[in] component_name The name of the component to use with this property payload. If this is
+ * for a root or non-component, this can be #AZ_SPAN_EMPTY.
+ * @param[in] property_name The name of the property to build a response payload for.
+ * @param[in] ack_code The HTTP-like status code to respond with. Please see #az_iot_status for
+ * possible supported values.
+ * @param[in] ack_version The version of the property the application is acknowledging.
+ * @param[in] ack_description The optional description detailing the context or any details about
+ * the acknowledgement.
+ *
+ * @return #az_result
+ */
 AZ_NODISCARD az_result az_iot_pnp_client_twin_end_property_with_status(
     az_iot_pnp_client const* client,
     az_json_writer* json_writer,
