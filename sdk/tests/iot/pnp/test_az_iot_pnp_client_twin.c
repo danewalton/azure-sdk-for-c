@@ -53,10 +53,10 @@ static const char test_correct_twin_patch_pub_topic[]
 EXAMPLE OF WHY SPLITTING INTO TWO APIS
 {
   "component_one": {
-    "prop_one": {
-      "component_one": "thing_two"
-    },
     "prop_two": "string"
+    "component_one": {
+      "thing_one": "thing_two"
+    },
   },
   "component_two": {
     "prop_three": 45,
@@ -67,7 +67,6 @@ EXAMPLE OF WHY SPLITTING INTO TWO APIS
 }
 
 */
-
 
 /*
 
@@ -100,6 +99,10 @@ static const az_span test_twin_payload = AZ_SPAN_LITERAL_FROM_STR(
     "thermostat1": {
       "__t": "c",
       "targetTemperature": 90
+      "manufacturer": "Sample-Manufacturer",
+      "model": "pnp-sample-Model-123",
+      "swVersion": "1.0.0.0",
+      "osName": "Contoso",
     },
     "targetTemperature": 54,
     "$version": 30
@@ -126,7 +129,8 @@ static const az_span test_twin_payload_long = AZ_SPAN_LITERAL_FROM_STR(
     "Manufacturer(TM)\",\"totalStorage\":1024,\"totalMemory\":128}}");
 static az_span test_temp_component_one = AZ_SPAN_LITERAL_FROM_STR("thermostat1");
 static az_span test_temp_component_two = AZ_SPAN_LITERAL_FROM_STR("thermostat2");
-static az_span* test_temp_component_names[] = { &test_temp_component_one, &test_temp_component_two };
+static az_span* test_temp_component_names[]
+    = { &test_temp_component_one, &test_temp_component_two };
 static const int32_t test_temp_component_names_size
     = sizeof(test_temp_component_names) / sizeof(test_temp_component_names[0]);
 
@@ -806,7 +810,7 @@ static void test_az_iot_pnp_client_twin_get_next_component_succeed()
   assert_int_equal(
       az_iot_pnp_client_twin_get_next_component_property(
           &client, &jr, &property_name, &property_value),
-      AZ_ERROR_IOT_END_OF_PROPERTIES);
+      AZ_IOT_END_OF_PROPERTIES);
 
   // Second component
   assert_int_equal(
@@ -830,12 +834,12 @@ static void test_az_iot_pnp_client_twin_get_next_component_succeed()
   assert_int_equal(
       az_iot_pnp_client_twin_get_next_component_property(
           &client, &jr, &property_name, &property_value),
-      AZ_ERROR_IOT_END_OF_PROPERTIES);
+      AZ_IOT_END_OF_PROPERTIES);
 
   // Not a component
   assert_int_equal(
       az_iot_pnp_client_twin_get_next_component(&client, &jr, true, &component_name),
-      AZ_ERROR_IOT_ITEM_NOT_COMPONENT);
+      AZ_IOT_ITEM_NOT_COMPONENT);
   assert_int_equal(
       az_iot_pnp_client_twin_get_next_component_property(
           &client, &jr, &property_name, &property_value),
@@ -847,7 +851,7 @@ static void test_az_iot_pnp_client_twin_get_next_component_succeed()
   // End of components (skipping version)
   assert_int_equal(
       az_iot_pnp_client_twin_get_next_component(&client, &jr, true, &component_name),
-      AZ_ERROR_IOT_END_OF_COMPONENTS);
+      AZ_IOT_END_OF_COMPONENTS);
 }
 
 static void test_az_iot_pnp_client_twin_get_next_component_long_succeed()
@@ -887,7 +891,7 @@ static void test_az_iot_pnp_client_twin_get_next_component_long_succeed()
   assert_int_equal(
       az_iot_pnp_client_twin_get_next_component_property(
           &client, &jr, &property_name, &property_value),
-      AZ_ERROR_IOT_END_OF_PROPERTIES);
+      AZ_IOT_END_OF_PROPERTIES);
 
   // Second component
   assert_int_equal(
@@ -905,12 +909,12 @@ static void test_az_iot_pnp_client_twin_get_next_component_long_succeed()
   assert_int_equal(
       az_iot_pnp_client_twin_get_next_component_property(
           &client, &jr, &property_name, &property_value),
-      AZ_ERROR_IOT_END_OF_PROPERTIES);
+      AZ_IOT_END_OF_PROPERTIES);
 
   // Not a component
   assert_int_equal(
       az_iot_pnp_client_twin_get_next_component(&client, &jr, true, &component_name),
-      AZ_ERROR_IOT_ITEM_NOT_COMPONENT);
+      AZ_IOT_ITEM_NOT_COMPONENT);
   assert_int_equal(
       az_iot_pnp_client_twin_get_next_component_property(
           &client, &jr, &property_name, &property_value),
@@ -922,7 +926,7 @@ static void test_az_iot_pnp_client_twin_get_next_component_long_succeed()
   // End of components (skipping version and reported properties section)
   assert_int_equal(
       az_iot_pnp_client_twin_get_next_component(&client, &jr, true, &component_name),
-      AZ_ERROR_IOT_END_OF_COMPONENTS);
+      AZ_IOT_END_OF_COMPONENTS);
 }
 
 #ifdef _MSC_VER

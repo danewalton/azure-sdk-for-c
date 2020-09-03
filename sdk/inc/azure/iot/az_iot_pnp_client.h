@@ -490,8 +490,8 @@ AZ_NODISCARD az_result az_iot_pnp_client_twin_property_end_component(
  *
  * @return #az_result
  * @retval #AZ_OK If the function found a component name.
- * @retval #AZ_ERROR_IOT_ITEM_NOT_COMPONENT If the next value is not a component name.
- * @retval #AZ_ERROR_IOT_END_OF_COMPONENTS If there are no more components to iterate over.
+ * @retval #AZ_IOT_ITEM_NOT_COMPONENT If the next value is not a component name.
+ * @retval #AZ_IOT_END_OF_COMPONENTS If there are no more components to iterate over.
  */
 AZ_NODISCARD az_result az_iot_pnp_client_twin_get_next_component(
     az_iot_pnp_client const* client,
@@ -509,7 +509,7 @@ AZ_NODISCARD az_result az_iot_pnp_client_twin_get_next_component(
  *
  * @return #az_result
  * @retval #AZ_OK If the function returned a valid property name and value.
- * @retval #AZ_ERROR_IOT_END_OF_PROPERTIES If there are no more properties left for the component.
+ * @retval #AZ_IOT_END_OF_PROPERTIES If there are no more properties left for the component.
  */
 AZ_NODISCARD az_result az_iot_pnp_client_twin_get_next_component_property(
     az_iot_pnp_client const* client,

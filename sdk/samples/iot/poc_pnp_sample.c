@@ -108,12 +108,12 @@ static void handle_device_twin_message(
           // device_info_process_property_update(component_name, property_name, &property_value);
         }
       }
-      else if (result == AZ_ERROR_IOT_ITEM_NOT_COMPONENT)
+      else if (result == AZ_IOT_ITEM_NOT_COMPONENT)
       {
         az_iot_pnp_client_twin_get_next_component_property(
             &pnp_client, &jr, &property_name, &property_value);
       }
-      else if (result == AZ_ERROR_IOT_END_OF_COMPONENTS)
+      else if (result == AZ_IOT_END_OF_COMPONENTS)
       {
         break;
       }
