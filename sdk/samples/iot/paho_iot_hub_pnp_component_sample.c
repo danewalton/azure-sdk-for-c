@@ -923,17 +923,13 @@ static void process_twin_message(az_span twin_message_span, bool is_partial)
                   &pnp_client,
                   &jw,
                   component_name.slice,
-                  property_name.slice,
-                  AZ_IOT_STATUS_NOT_FOUND,
-                  version,
-                  property_response_description_failed))
+                  property_name.slice))
           || az_result_failed(append_json_token(&jw, &property_value.token))
           || az_result_failed(
               result = az_iot_pnp_client_twin_end_property_with_status(
                   &pnp_client,
                   &jw,
                   component_name.slice,
-                  property_name.slice,
                   AZ_IOT_STATUS_NOT_FOUND,
                   version,
                   property_response_description_failed)))
