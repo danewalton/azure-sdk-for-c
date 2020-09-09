@@ -59,15 +59,12 @@ AZ_NODISCARD az_result az_iot_pnp_client_twin_property_begin_component(
 
 AZ_NODISCARD az_result az_iot_pnp_client_twin_property_end_component(
     az_iot_pnp_client const* client,
-    az_json_writer* json_writer,
-    az_span component_name)
+    az_json_writer* json_writer)
 {
   _az_PRECONDITION_NOT_NULL(client);
   _az_PRECONDITION_NOT_NULL(json_writer);
-  _az_PRECONDITION_VALID_SPAN(component_name, 1, false);
 
   (void)client;
-  (void)component_name;
 
   return az_json_writer_append_end_object(json_writer);
 }
@@ -76,19 +73,13 @@ AZ_NODISCARD az_result az_iot_pnp_client_twin_begin_property_with_status(
     az_iot_pnp_client const* client,
     az_json_writer* json_writer,
     az_span component_name,
-    az_span property_name,
-    int32_t ack_code,
-    int32_t ack_version,
-    az_span ack_description)
+    az_span property_name)
 {
   _az_PRECONDITION_NOT_NULL(client);
   _az_PRECONDITION_NOT_NULL(json_writer);
   _az_PRECONDITION_VALID_SPAN(property_name, 1, false);
 
   (void)client;
-  (void)ack_code;
-  (void)ack_version;
-  (void)ack_description;
 
   _az_RETURN_IF_FAILED(az_json_writer_append_begin_object(json_writer));
   if (az_span_size(component_name) != 0)
@@ -112,17 +103,14 @@ AZ_NODISCARD az_result az_iot_pnp_client_twin_end_property_with_status(
     az_iot_pnp_client const* client,
     az_json_writer* json_writer,
     az_span component_name,
-    az_span property_name,
     int32_t ack_code,
     int32_t ack_version,
     az_span ack_description)
 {
   _az_PRECONDITION_NOT_NULL(client);
   _az_PRECONDITION_NOT_NULL(json_writer);
-  _az_PRECONDITION_VALID_SPAN(property_name, 1, false);
 
   (void)client;
-  (void)property_name;
 
   _az_RETURN_IF_FAILED(az_json_writer_append_property_name(json_writer, property_ack_code_name));
   _az_RETURN_IF_FAILED(az_json_writer_append_int32(json_writer, ack_code));

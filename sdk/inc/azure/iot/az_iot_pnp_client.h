@@ -465,14 +465,12 @@ AZ_NODISCARD az_result az_iot_pnp_client_twin_property_begin_component(
  * @param[in] client The #az_iot_pnp_client to use for this call.
  * @param[in,out] The #az_json_writer to append the necessary characters for an IoT Plug and Play
  * component.
- * @param [in] component_name The component name to end.
  *
  * @return #az_result
  */
 AZ_NODISCARD az_result az_iot_pnp_client_twin_property_end_component(
     az_iot_pnp_client const* client,
-    az_json_writer* json_writer,
-    az_span component_name);
+    az_json_writer* json_writer);
 
 /**
  * @brief Begin a property response payload with status
@@ -495,10 +493,7 @@ AZ_NODISCARD az_result az_iot_pnp_client_twin_begin_property_with_status(
     az_iot_pnp_client const* client,
     az_json_writer* json_writer,
     az_span component_name,
-    az_span property_name,
-    int32_t ack_code,
-    int32_t ack_version,
-    az_span ack_description);
+    az_span property_name);
 
 /**
  * @brief End a property response payload with status
@@ -520,7 +515,6 @@ AZ_NODISCARD az_result az_iot_pnp_client_twin_end_property_with_status(
     az_iot_pnp_client const* client,
     az_json_writer* json_writer,
     az_span component_name,
-    az_span property_name,
     int32_t ack_code,
     int32_t ack_version,
     az_span ack_description);
