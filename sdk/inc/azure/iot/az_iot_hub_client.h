@@ -17,6 +17,7 @@
 #ifndef _az_IOT_HUB_CLIENT_H
 #define _az_IOT_HUB_CLIENT_H
 
+#include <azure/core/az_json.h>
 #include <azure/core/az_result.h>
 #include <azure/core/az_span.h>
 #include <azure/iot/az_iot_common.h>
@@ -46,6 +47,9 @@ typedef struct
                          usage statistics. */
   az_span model_id; /**< The model id used to identify the capabilities of a device based on the
                        Digital Twin document. */
+  az_span**
+      component_names; /**< The component array containing #az_span's with names of the components*/
+  int32_t component_names_size; /**< The number of component names in the `component_names` array*/
 } az_iot_hub_client_options;
 
 /**
@@ -226,6 +230,8 @@ AZ_NODISCARD az_result az_iot_hub_client_sas_get_password(
  * @remark This topic can also be used to set the MQTT Will message in the Connect message.
  *
  * @param[in] client The #az_iot_hub_client to use for this call.
+ * @param[in] component_name An #az_span specifying the component name to publish telemetry for. If
+ * there is no associated component, this parameter can be #AZ_SPAN_EMPTY.
  * @param[in] properties An optional #az_iot_message_properties object (can be NULL).
  * @param[out] mqtt_topic A buffer with sufficient capacity to hold the MQTT topic. If
  *                        successful, contains a null-terminated string with the topic that
@@ -238,6 +244,7 @@ AZ_NODISCARD az_result az_iot_hub_client_sas_get_password(
  */
 AZ_NODISCARD az_result az_iot_hub_client_telemetry_get_publish_topic(
     az_iot_hub_client const* client,
+    az_span component_name,
     az_iot_message_properties const* properties,
     char* mqtt_topic,
     size_t mqtt_topic_size,
@@ -303,6 +310,9 @@ typedef struct
 {
   az_span request_id; /**< The request id.
                        * @note The application must match the method request and method response. */
+  az_span component; /**< The name of the component which the command was invoked for.
+                      * @note Can be `AZ_SPAN_EMPTY` if for the root component or if not using IoT
+                      * Plug and Play */
   az_span name; /**< The method name. */
 } az_iot_hub_client_method_request;
 
@@ -458,6 +468,112 @@ AZ_NODISCARD az_result az_iot_hub_client_twin_patch_get_publish_topic(
     char* mqtt_topic,
     size_t mqtt_topic_size,
     size_t* out_mqtt_topic_length);
+
+/**
+ * @brief Append the necessary characters to a JSON payload to begin a twin component.
+ *
+ * @param[in] client The #az_iot_hub_client to use for this call.
+ * @param[in,out] The #az_json_writer to append the necessary characters for an IoT Plug and Play
+ * component.
+ * @param [in] component_name The component name to begin.
+ *
+ * @return #az_result
+ */
+AZ_NODISCARD az_result az_iot_hub_client_twin_property_begin_component(
+    az_iot_hub_client const* client,
+    az_json_writer* json_writer,
+    az_span component_name);
+
+/**
+ * @brief Append the necessary characters to a JSON payload to end a twin component.
+ *
+ * @param[in] client The #az_iot_hub_client to use for this call.
+ * @param[in,out] The #az_json_writer to append the necessary characters for an IoT Plug and Play
+ * component.
+ *
+ * @return #az_result
+ */
+AZ_NODISCARD az_result az_iot_hub_client_twin_property_end_component(
+    az_iot_hub_client const* client,
+    az_json_writer* json_writer);
+
+/**
+ * @brief Begin a property response payload with status
+ *
+ * @param[in] client The #az_iot_hub_client to use for this call.
+ * @param[in] json_writer The initialized #az_json_writer to append data to.
+ * @param[in] component_name The name of the component to use with this property payload. If this is
+ * for a root or non-component, this can be #AZ_SPAN_EMPTY.
+ * @param[in] property_name The name of the property to build a response payload for.
+ *
+ * @return #az_result
+ */
+AZ_NODISCARD az_result az_iot_hub_client_twin_begin_property_with_status(
+    az_iot_hub_client const* client,
+    az_json_writer* json_writer,
+    az_span component_name,
+    az_span property_name);
+
+/**
+ * @brief End a property response payload with status
+ *
+ * @param[in] client The #az_iot_hub_client to use for this call.
+ * @param[in] json_writer The initialized #az_json_writer to append data to.
+ * @param[in] component_name The name of the component to use with this property payload. If this is
+ * for a root or non-component, this can be #AZ_SPAN_EMPTY.
+ * @param[in] ack_code The HTTP-like status code to respond with. Please see #az_iot_status for
+ * possible supported values.
+ * @param[in] ack_version The version of the property the application is acknowledging.
+ * @param[in] ack_description The optional description detailing the context or any details about
+ * the acknowledgement.
+ *
+ * @return #az_result
+ */
+AZ_NODISCARD az_result az_iot_hub_client_twin_end_property_with_status(
+    az_iot_hub_client const* client,
+    az_json_writer* json_writer,
+    az_span component_name,
+    int32_t ack_code,
+    int32_t ack_version,
+    az_span ack_description);
+
+/**
+ * @brief Read and return the next IoT Plug and Play twin properties component
+ *
+ * @param[in] client The #az_iot_hub_client to use for this call.
+ * @param[in] json_reader The #az_json_reader to parse through.
+ * @param[in] is_partial The boolean representing whether the twin document is from a partial update
+ * (PATCH) or a full twin document (GET).
+ * @param[out] out_component_name The #az_json_token* representing the value of the component.
+ *
+ * @return #az_result
+ * @retval #AZ_OK If the function found a component name.
+ * @retval #AZ_IOT_ITEM_NOT_COMPONENT If the next value is not a component name.
+ * @retval #AZ_IOT_END_OF_COMPONENTS If there are no more components to iterate over.
+ */
+AZ_NODISCARD az_result az_iot_hub_client_twin_get_next_component(
+    az_iot_hub_client const* client,
+    az_json_reader* json_reader,
+    bool is_partial,
+    az_json_token* out_component_name);
+
+/**
+ * @brief Read the IoT Plug and Play twin properties for a given component
+ *
+ * @param[in] client The #az_iot_hub_client to use for this call.
+ * @param[in] json_reader The #az_json_reader to parse through.
+ * @param[out] out_property_name The #az_json_token* representing the name of the property.
+ * @param[out] out_property_value The #az_json_reader* representing the value of the property.
+ *
+ * @return #az_result
+ * @retval #AZ_OK If the function returned a valid property name and value.
+ * @retval #AZ_IOT_END_OF_PROPERTIES If there are no more properties left for the component.
+ */
+AZ_NODISCARD az_result az_iot_hub_client_twin_get_next_component_property(
+    az_iot_hub_client const* client,
+    az_json_reader* json_reader,
+    az_json_token* out_property_name,
+    az_json_reader* out_property_value);
 
 #include <azure/core/_az_cfg_suffix.h>
 
