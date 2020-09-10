@@ -253,6 +253,8 @@ AZ_NODISCARD az_result az_iot_hub_client_telemetry_get_publish_topic(
 /*
  *
  * Cloud-to-device (C2D) APIs
+ * 
+ * @warning THIS IS NOT A FEATURE WHICH CAN BE MODELED BY PNP
  *
  */
 
@@ -292,37 +294,38 @@ AZ_NODISCARD az_result az_iot_hub_client_c2d_parse_received_topic(
 
 /*
  *
- * Methods APIs
+ * Command APIs
  *
+ * If you're using IoT hub, this is the same as direct methods.
  */
 
 /**
  * @brief The MQTT topic filter to subscribe to method requests.
- * @remark Methods MQTT Publish messages will have QoS At most once (0).
+ * @remark Command MQTT Publish messages will have QoS At most once (0).
  */
 #define AZ_IOT_HUB_CLIENT_METHODS_SUBSCRIBE_TOPIC "$iothub/methods/POST/#"
 
 /**
- * @brief A method request received from IoT Hub.
+ * @brief A command request received from IoT Hub.
  *
  */
 typedef struct
 {
   az_span request_id; /**< The request id.
-                       * @note The application must match the method request and method response. */
+                       * @note The application must match the command request and command response. */
   az_span component; /**< The name of the component which the command was invoked for.
                       * @note Can be `AZ_SPAN_EMPTY` if for the root component or if not using IoT
                       * Plug and Play */
-  az_span name; /**< The method name. */
-} az_iot_hub_client_method_request;
+  az_span name; /**< The command name. */
+} az_iot_hub_client_command_request;
 
 /**
- * @brief Attempts to parse a received message's topic for method features.
+ * @brief Attempts to parse a received message's topic for command features.
  *
  * @param[in] client The #az_iot_hub_client to use for this call.
  * @param[in] received_topic An #az_span containing the received topic.
- * @param[out] out_request If the message is a method request, this will contain the
- *                         #az_iot_hub_client_method_request.
+ * @param[out] out_request If the message is a command request, this will contain the
+ *                         #az_iot_hub_client_command_request.
  * @return An #az_result value indicating the result of the operation.
  * @retval #AZ_OK The topic is meant for this feature and the \p out_request was populated
  * with relevant information.
@@ -330,18 +333,18 @@ typedef struct
  * be due to either a malformed topic OR the message which came in on this topic is not meant for
  * this feature.
  */
-AZ_NODISCARD az_result az_iot_hub_client_methods_parse_received_topic(
+AZ_NODISCARD az_result az_iot_hub_client_commands_parse_received_topic(
     az_iot_hub_client const* client,
     az_span received_topic,
-    az_iot_hub_client_method_request* out_request);
+    az_iot_hub_client_command_request* out_request);
 
 /**
- * @brief Gets the MQTT topic that must be used to respond to method requests.
+ * @brief Gets the MQTT topic that must be used to respond to command requests.
  *
  * @param[in] client The #az_iot_hub_client to use for this call.
- * @param[in] request_id The request id. Must match a received #az_iot_hub_client_method_request
+ * @param[in] request_id The request id. Must match a received #az_iot_hub_client_command_request
  *                       request_id.
- * @param[in] status A code that indicates the result of the method, as defined by the user.
+ * @param[in] status A code that indicates the result of the command, as defined by the user.
  * @param[out] mqtt_topic A buffer with sufficient capacity to hold the MQTT topic. If
  *                        successful, contains a null-terminated string with the topic that
  *                        needs to be passed to the MQTT client.
@@ -351,7 +354,7 @@ AZ_NODISCARD az_result az_iot_hub_client_methods_parse_received_topic(
  * @return An #az_result value indicating the result of the operation.
  * @retval #AZ_OK The topic was retrieved successfully.
  */
-AZ_NODISCARD az_result az_iot_hub_client_methods_response_get_publish_topic(
+AZ_NODISCARD az_result az_iot_hub_client_commands_response_get_publish_topic(
     az_iot_hub_client const* client,
     az_span request_id,
     uint16_t status,
