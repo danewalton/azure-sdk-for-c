@@ -238,14 +238,14 @@ AZ_NODISCARD az_result az_iot_pnp_client_twin_get_next_component(
     az_iot_pnp_client const* client,
     az_json_reader* json_reader,
     bool is_partial,
-    az_json_token* out_component_name)
+    az_json_token* out_component_name,
+    int32_t* out_version)
 {
   _az_PRECONDITION_NOT_NULL(client);
   _az_PRECONDITION_NOT_NULL(json_reader);
   _az_PRECONDITION_NOT_NULL(out_component_name);
 
   az_json_reader copy_json_reader;
-  int32_t version;
 
   // End of components
   if (json_reader->token.kind == AZ_JSON_TOKEN_END_OBJECT)
@@ -301,7 +301,7 @@ AZ_NODISCARD az_result az_iot_pnp_client_twin_get_next_component(
 
   copy_json_reader = *json_reader;
   if (az_result_failed(json_child_token_move(&copy_json_reader, iot_hub_twin_desired_version))
-      || az_result_failed(az_json_token_get_int32(&(copy_json_reader.token), (int32_t*)&version)))
+      || az_result_failed(az_json_token_get_int32(&(copy_json_reader.token), out_version)))
   {
     return AZ_ERROR_UNEXPECTED_CHAR;
   }
