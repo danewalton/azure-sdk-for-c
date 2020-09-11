@@ -518,6 +518,9 @@ AZ_NODISCARD az_result az_iot_pnp_client_twin_end_property_with_status(
  * @param[in] is_partial The boolean representing whether the twin document is from a partial update
  * (PATCH) or a full twin document (GET).
  * @param[out] out_component_name The #az_json_token* representing the value of the component.
+ * @param[out] out_version The `int32_t` representing the version of the properties. This is set
+ * once on the first invocation of the API and the same pointer shall be passed to subsequent calls
+ * for the duration of the parsing.
  *
  * @return #az_result
  * @retval #AZ_OK If the function found a component name.
@@ -528,7 +531,8 @@ AZ_NODISCARD az_result az_iot_pnp_client_twin_get_next_component(
     az_iot_pnp_client const* client,
     az_json_reader* json_reader,
     bool is_partial,
-    az_json_token* out_component_name);
+    az_json_token* out_component_name,
+    int32_t* out_version);
 
 /**
  * @brief Read the IoT Plug and Play twin properties for a given component

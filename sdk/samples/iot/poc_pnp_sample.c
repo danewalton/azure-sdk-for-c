@@ -88,7 +88,7 @@ static void handle_device_twin_message(
 
     az_result result;
     while (az_result_succeeded(result = az_iot_pnp_client_twin_get_next_component(
-          &pnp_client, &jr, !is_twin_get, &component_name)))
+          &pnp_client, &jr, !is_twin_get, &component_name, &version_num)))
     {
       if (result == AZ_OK)
       {
