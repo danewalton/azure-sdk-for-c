@@ -1007,7 +1007,8 @@ static void handle_command_request(
             &publish_message.out_payload,
             &status)))
     {
-      IOT_SAMPLE_LOG_AZ_SPAN("Client invoked command on Temperature Sensor 1:", command_request->name);
+      IOT_SAMPLE_LOG_AZ_SPAN(
+          "Client invoked command on Temperature Sensor 1:", command_request->name);
     }
   }
   else if (az_span_is_content_equal(thermostat_2.component_name, command_request->component))
@@ -1020,7 +1021,8 @@ static void handle_command_request(
             &publish_message.out_payload,
             &status)))
     {
-      IOT_SAMPLE_LOG_AZ_SPAN("Client invoked command on Temperature Sensor 2:", command_request->name);
+      IOT_SAMPLE_LOG_AZ_SPAN(
+          "Client invoked command on Temperature Sensor 2:", command_request->name);
     }
   }
   else if (az_span_size(command_request->component) == 0)
@@ -1032,7 +1034,8 @@ static void handle_command_request(
             &publish_message.out_payload,
             &status)))
     {
-      IOT_SAMPLE_LOG_AZ_SPAN("Client invoked command on Temperature Controller:", command_request->name);
+      IOT_SAMPLE_LOG_AZ_SPAN(
+          "Client invoked command on Temperature Controller:", command_request->name);
     }
   }
   else
@@ -1185,54 +1188,6 @@ static void temp_controller_build_serial_number_reported_property(
   *out_payload = az_json_writer_get_bytes_used_in_destination(&jr);
 }
 
-// static void temp_controller_build_error_reported_property_with_status(
-//     az_span component_name,
-//     az_span property_name,
-//     az_json_reader* property_value,
-//     az_iot_status status,
-//     int32_t version,
-//     az_span payload,
-//     az_span* out_payload)
-// {
-//   az_result rc;
-
-//   az_json_writer jr;
-//   rc = az_json_writer_init(&jr, payload, NULL);
-
-//   if (az_result_failed(
-//           rc = az_iot_pnp_client_twin_begin_property_with_status(
-//               &pnp_client, &jr, component_name, property_name)))
-//   {
-//     IOT_SAMPLE_LOG_ERROR(
-//         "Failed to build Temperature Controller error payload: az_result return code 0x%08x.", rc);
-//     exit(rc);
-//   }
-//   rc = append_json_token(&jr, &property_value->token);
-//   rc = az_iot_pnp_client_twin_end_property_with_status(
-//       &pnp_client, &jr, component_name, (int32_t)status, version, twin_response_failed);
-
-//   *out_payload = az_json_writer_get_bytes_used_in_destination(&jr);
-// }
-
-// az_result temp_controller_process_property_update(
-//     az_span component_name,
-//     az_json_token const* property_name,
-//     az_json_reader const* property_value,
-//     int32_t version,
-//     az_span payload,
-//     az_span* out_payload)
-// {
-//   // Not implemented because no properties currently supported to update.
-//   (void)component_name;
-//   (void)property_name;
-//   (void)property_value;
-//   (void)version;
-//   (void)payload;
-//   (void)out_payload;
-
-//   return AZ_ERROR_ITEM_NOT_FOUND;
-// }
-
 static az_result temp_controller_process_command_request(
     az_span command_name,
     az_span command_received_payload,
@@ -1295,127 +1250,6 @@ static void temp_controller_invoke_reboot(void)
   send_serial_number();
   request_device_twin_document();
 }
-
-// static void property_callback(
-//     az_span component_name,
-//     az_json_token const* property_name,
-//     az_json_reader property_value,
-//     int32_t version,
-//     void* user_context_callback)
-// {
-//   az_result rc;
-
-//   (void)user_context_callback;
-
-//   // Get the Twin Patch topic to send a property update.
-//   if (az_result_failed(
-//           rc = az_iot_pnp_client_twin_patch_get_publish_topic(
-//               &pnp_client, pnp_mqtt_get_request_id(), publish_message.topic,
-//               publish_message.topic_length, NULL)))
-//   {
-//     IOT_SAMPLE_LOG_ERROR(
-//         "Failed to get the Twin Patch topic: az_result return code 0x%08x.", rc);
-//     exit(rc);
-//   }
-
-//   // Attempt to process property update per component until find success or exit on error.
-//   if (az_span_is_content_equal(thermostat_1.component_name, component_name))
-//   {
-//     if (az_result_failed(
-//             rc = pnp_thermostat_process_property_update(
-//                 &thermostat_1,
-//                 property_name,
-//                 &property_value,
-//                 version,
-//                 publish_message.payload,
-//                 &publish_message.out_payload)))
-//     {
-//       IOT_SAMPLE_LOG_ERROR(
-//           "Temperature Sensor 1 does not support writeable property `%.*s`.",
-//           az_span_size(property_name->slice),
-//           az_span_ptr(property_name->slice));
-
-//       // Build the component error message.
-//       pnp_thermostat_build_error_reported_property_with_status(
-//           component_name,
-//           property_name->slice,
-//           &property_value,
-//           AZ_IOT_STATUS_NOT_FOUND,
-//           version,
-//           publish_message.payload,
-//           &publish_message.out_payload);
-//     }
-//   }
-//   else if (az_span_is_content_equal(thermostat_2.component_name, component_name))
-//   {
-//     if (az_result_failed(
-//             rc = pnp_thermostat_process_property_update(
-//                 &thermostat_2,
-//                 property_name,
-//                 &property_value,
-//                 version,
-//                 publish_message.payload,
-//                 &publish_message.out_payload)))
-//     {
-//       IOT_SAMPLE_LOG_ERROR(
-//           "Temperature Sensor 2 does not support writeable property `%.*s`.",
-//           az_span_size(property_name->slice),
-//           az_span_ptr(property_name->slice));
-
-//       // Build the component error message.
-//       pnp_thermostat_build_error_reported_property_with_status(
-//           component_name,
-//           property_name->slice,
-//           &property_value,
-//           AZ_IOT_STATUS_NOT_FOUND,
-//           version,
-//           publish_message.payload,
-//           &publish_message.out_payload);
-//     }
-//   }
-//   else if (az_span_size(component_name) == 0)
-//   {
-//     if (az_result_failed(
-//             rc = temp_controller_process_property_update(
-//                 component_name,
-//                 property_name,
-//                 &property_value,
-//                 version,
-//                 publish_message.payload,
-//                 &publish_message.out_payload)))
-//     {
-//       IOT_SAMPLE_LOG_ERROR(
-//           "Temperature Controller does not support writable property `%.*s`. All writeable "
-//           "properties are on sub-components.",
-//           az_span_size(property_name->slice),
-//           az_span_ptr(property_name->slice));
-
-//       // Build the root component error message with status.
-//       temp_controller_build_error_reported_property_with_status(
-//           component_name,
-//           property_name->slice,
-//           &property_value,
-//           AZ_IOT_STATUS_NOT_FOUND,
-//           version,
-//           publish_message.payload,
-//           &publish_message.out_payload);
-//     }
-//   }
-//   else
-//   {
-//     IOT_SAMPLE_LOG("No components recognized to update a property.");
-//   }
-
-//   // Send response. On a successfull property update above, out_payload will already be set.
-//   publish_mqtt_message(
-//       publish_message.topic, publish_message.out_payload, IOT_SAMPLE_MQTT_PUBLISH_QOS);
-//   IOT_SAMPLE_LOG_SUCCESS("Client sent reported property with status message.");
-//   IOT_SAMPLE_LOG_AZ_SPAN("Payload:", publish_message.out_payload);
-//   IOT_SAMPLE_LOG(" "); // Formatting.
-
-//   // Receive the response from the server.
-//   receive_mqtt_message();
-// }
 
 static az_result append_json_token(az_json_writer* jw, az_json_token* value)
 {
