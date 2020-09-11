@@ -680,6 +680,7 @@ static void test_az_iot_pnp_client_twin_get_next_component_long_succeed()
       az_iot_pnp_client_twin_get_next_component(&client, &jr, false, &component_name, &version),
       AZ_OK);
   assert_true(az_json_token_is_text_equal(&component_name, test_temp_component_two));
+  assert_int_equal(version, 30);
 
   assert_int_equal(
       az_iot_pnp_client_twin_get_next_component_property(
@@ -698,6 +699,7 @@ static void test_az_iot_pnp_client_twin_get_next_component_long_succeed()
   assert_int_equal(
       az_iot_pnp_client_twin_get_next_component(&client, &jr, true, &component_name, &version),
       AZ_OK);
+  assert_int_equal(version, 30);
   assert_true(az_json_token_is_text_equal(&component_name, test_temp_component_one));
 
   assert_int_equal(
@@ -717,6 +719,7 @@ static void test_az_iot_pnp_client_twin_get_next_component_long_succeed()
   assert_int_equal(
       az_iot_pnp_client_twin_get_next_component(&client, &jr, true, &component_name, &version),
       AZ_IOT_ITEM_NOT_COMPONENT);
+  assert_int_equal(version, 30);
   assert_int_equal(
       az_iot_pnp_client_twin_get_next_component_property(
           &client, &jr, &property_name, &property_value),
@@ -729,6 +732,7 @@ static void test_az_iot_pnp_client_twin_get_next_component_long_succeed()
   assert_int_equal(
       az_iot_pnp_client_twin_get_next_component(&client, &jr, true, &component_name, &version),
       AZ_IOT_END_OF_COMPONENTS);
+  assert_int_equal(version, 30);
 }
 
 #ifdef _MSC_VER
