@@ -571,8 +571,8 @@ static void test_az_iot_pnp_client_twin_get_next_component_succeed()
 {
   az_iot_pnp_client client;
   az_iot_pnp_client_options options = az_iot_pnp_client_options_default();
-  options.component_names = test_temperature_components;
-  options.component_names_size = test_temperature_components_size;
+  options.component_names = test_components;
+  options.component_names_size = test_components_size;
   assert_int_equal(
       az_iot_pnp_client_init(&client, test_device_hostname, test_device_id, test_model_id, &options),
       AZ_OK);
@@ -661,8 +661,8 @@ static void test_az_iot_pnp_client_twin_get_next_component_long_succeed()
 {
   az_iot_pnp_client client;
   az_iot_pnp_client_options options = az_iot_pnp_client_options_default();
-  options.component_names = test_components;
-  options.component_names_size = test_components_size;
+  options.component_names = test_temperature_components;
+  options.component_names_size = test_temperature_components_size;
   assert_int_equal(
       az_iot_pnp_client_init(&client, test_device_hostname, test_device_id, test_model_id, &options),
       AZ_OK);
