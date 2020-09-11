@@ -21,7 +21,8 @@ AZ_NODISCARD az_iot_pnp_client_options az_iot_pnp_client_options_default()
 {
   return (az_iot_pnp_client_options){ .module_id = AZ_SPAN_EMPTY,
                                       .user_agent = client_sdk_version,
-                                      .model_id = AZ_SPAN_EMPTY };
+                                      .component_names = NULL,
+                                      .component_names_size = 0 };
 }
 
 AZ_NODISCARD az_result az_iot_pnp_client_init(
@@ -29,19 +30,14 @@ AZ_NODISCARD az_result az_iot_pnp_client_init(
     az_span iot_hub_hostname,
     az_span device_id,
     az_span model_id,
-    az_span* components[],
-    int32_t components_size,
     az_iot_pnp_client_options const* options)
 {
   _az_PRECONDITION_NOT_NULL(client);
   _az_PRECONDITION_VALID_SPAN(iot_hub_hostname, 1, false);
   _az_PRECONDITION_VALID_SPAN(device_id, 1, false);
   _az_PRECONDITION_VALID_SPAN(model_id, 1, false);
-  _az_PRECONDITION(components_size >= 0);
 
   client->_internal.options = (options == NULL) ? az_iot_pnp_client_options_default() : *options;
-  client->_internal.component_names = components;
-  client->_internal.component_names_size = components_size;
 
   az_iot_hub_client_options hub_options = az_iot_hub_client_options_default();
   hub_options.model_id = model_id;

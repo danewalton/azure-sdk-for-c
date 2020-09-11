@@ -28,10 +28,6 @@ static const az_span test_model_id
 static const az_span test_module_id = AZ_SPAN_LITERAL_FROM_STR("my_module_id");
 static const az_span test_props = AZ_SPAN_LITERAL_FROM_STR(TEST_PROPS_STR);
 static az_span test_component_one = AZ_SPAN_LITERAL_FROM_STR("component_one");
-static az_span test_component_two = AZ_SPAN_LITERAL_FROM_STR("component_two");
-static az_span* test_component_names[] = { &test_component_one, &test_component_two };
-static const int32_t test_component_names_size
-    = sizeof(test_component_names) / sizeof(test_component_names[0]);
 
 static char test_props_buffer[64] = TEST_PROPS_STR;
 
@@ -79,8 +75,6 @@ static void test_az_iot_pnp_client_telemetry_get_publish_topic_NULL_mqtt_topic_f
           test_device_hostname,
           test_device_id,
           test_model_id,
-          test_component_names,
-          test_component_names_size,
           NULL),
       AZ_OK);
 
@@ -102,8 +96,6 @@ static void test_az_iot_pnp_client_telemetry_get_publish_topic_NULL_out_mqtt_top
           test_device_hostname,
           test_device_id,
           test_model_id,
-          test_component_names,
-          test_component_names_size,
           NULL),
       AZ_OK);
 
@@ -128,8 +120,6 @@ static void test_az_iot_pnp_client_telemetry_get_publish_topic_no_comp_no_option
           test_device_hostname,
           test_device_id,
           test_model_id,
-          test_component_names,
-          test_component_names_size,
           NULL),
       AZ_OK);
 
@@ -156,8 +146,6 @@ static void test_az_iot_pnp_client_telemetry_get_publish_topic_no_options_no_pro
           test_device_hostname,
           test_device_id,
           test_model_id,
-          test_component_names,
-          test_component_names_size,
           NULL),
       AZ_OK);
 
@@ -187,8 +175,6 @@ static void test_az_iot_pnp_client_telemetry_get_publish_topic_with_options_no_p
           test_device_hostname,
           test_device_id,
           test_model_id,
-          test_component_names,
-          test_component_names_size,
           &options),
       AZ_OK);
 
@@ -220,8 +206,6 @@ test_az_iot_pnp_client_telemetry_get_publish_topic_no_comp_with_options_with_pro
           test_device_hostname,
           test_device_id,
           test_model_id,
-          test_component_names,
-          test_component_names_size,
           &options),
       AZ_OK);
 
@@ -258,8 +242,6 @@ static void test_az_iot_pnp_client_telemetry_get_publish_topic_with_options_with
           test_device_hostname,
           test_device_id,
           test_model_id,
-          test_component_names,
-          test_component_names_size,
           &options),
       AZ_OK);
 
@@ -293,8 +275,6 @@ static void test_az_iot_pnp_client_telemetry_get_publish_topic_with_props_unfill
           test_device_hostname,
           test_device_id,
           test_model_id,
-          test_component_names,
-          test_component_names_size,
           NULL),
       AZ_OK);
 
@@ -341,8 +321,6 @@ test_az_iot_pnp_client_telemetry_get_publish_topic_with_options_with_props_small
           test_device_hostname,
           test_device_id,
           test_model_id,
-          test_component_names,
-          test_component_names_size,
           &options),
       AZ_OK);
 
@@ -356,7 +334,7 @@ test_az_iot_pnp_client_telemetry_get_publish_topic_with_options_with_props_small
   assert_true(
       az_iot_pnp_client_telemetry_get_publish_topic(
           &client, test_component_one, &props, test_buf, sizeof(test_buf), &test_length)
-      == AZ_ERROR_INSUFFICIENT_SPAN_SIZE);
+      == AZ_ERROR_NOT_ENOUGH_SPACE);
 }
 
 static void test_az_iot_pnp_client_telemetry_get_publish_topic_no_options_with_props_succeed(
@@ -371,8 +349,6 @@ static void test_az_iot_pnp_client_telemetry_get_publish_topic_no_options_with_p
           test_device_hostname,
           test_device_id,
           test_model_id,
-          test_component_names,
-          test_component_names_size,
           NULL),
       AZ_OK);
 
@@ -407,8 +383,6 @@ test_az_iot_pnp_client_telemetry_get_publish_topic_no_options_with_props_small_b
           test_device_hostname,
           test_device_id,
           test_model_id,
-          test_component_names,
-          test_component_names_size,
           NULL),
       AZ_OK);
 
@@ -422,7 +396,7 @@ test_az_iot_pnp_client_telemetry_get_publish_topic_no_options_with_props_small_b
   assert_true(
       az_iot_pnp_client_telemetry_get_publish_topic(
           &client, test_component_one, &props, test_buf, sizeof(test_buf), &test_length)
-      == AZ_ERROR_INSUFFICIENT_SPAN_SIZE);
+      == AZ_ERROR_NOT_ENOUGH_SPACE);
 }
 
 static void
@@ -441,8 +415,6 @@ test_az_iot_pnp_client_telemetry_get_publish_topic_with_options_module_id_with_p
           test_device_hostname,
           test_device_id,
           test_model_id,
-          test_component_names,
-          test_component_names_size,
           &options),
       AZ_OK);
 
@@ -480,8 +452,6 @@ test_az_iot_pnp_client_telemetry_get_publish_topic_with_options_module_id_with_p
           test_device_hostname,
           test_device_id,
           test_model_id,
-          test_component_names,
-          test_component_names_size,
           &options),
       AZ_OK);
 
@@ -497,7 +467,7 @@ test_az_iot_pnp_client_telemetry_get_publish_topic_with_options_module_id_with_p
   assert_true(
       az_iot_pnp_client_telemetry_get_publish_topic(
           &client, test_component_one, &props, test_buf, sizeof(test_buf), &test_length)
-      == AZ_ERROR_INSUFFICIENT_SPAN_SIZE);
+      == AZ_ERROR_NOT_ENOUGH_SPACE);
 }
 
 int test_az_iot_pnp_client_telemetry()

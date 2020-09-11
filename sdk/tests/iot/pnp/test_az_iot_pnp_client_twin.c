@@ -29,9 +29,6 @@ static const az_span test_model_id
     = AZ_SPAN_LITERAL_FROM_STR("dtmi:YOUR_COMPANY_NAME_HERE:sample_device;1");
 static az_span test_component_one = AZ_SPAN_LITERAL_FROM_STR("component_one");
 static az_span test_component_two = AZ_SPAN_LITERAL_FROM_STR("component_two");
-static az_span* test_component_names[] = { &test_component_one, &test_component_two };
-static const int32_t test_component_names_size
-    = sizeof(test_component_names) / sizeof(test_component_names[0]);
 static const az_span test_device_request_id = AZ_SPAN_LITERAL_FROM_STR("id_one");
 static const az_span test_twin_received_topic_desired_success
     = AZ_SPAN_LITERAL_FROM_STR("$iothub/twin/PATCH/properties/desired/?$version=id_one");
@@ -129,10 +126,6 @@ static const az_span test_twin_payload_long = AZ_SPAN_LITERAL_FROM_STR(
     "Manufacturer(TM)\",\"totalStorage\":1024,\"totalMemory\":128}}");
 static az_span test_temp_component_one = AZ_SPAN_LITERAL_FROM_STR("thermostat1");
 static az_span test_temp_component_two = AZ_SPAN_LITERAL_FROM_STR("thermostat2");
-static az_span* test_temp_component_names[]
-    = { &test_temp_component_one, &test_temp_component_two };
-static const int32_t test_temp_component_names_size
-    = sizeof(test_temp_component_names) / sizeof(test_temp_component_names[0]);
 
 #ifndef AZ_NO_PRECONDITION_CHECKING
 ENABLE_PRECONDITION_CHECK_TESTS()
@@ -155,8 +148,6 @@ static void test_az_iot_pnp_client_twin_document_get_publish_topic_NULL_request_
           test_device_hostname,
           test_device_id,
           test_model_id,
-          test_component_names,
-          test_component_names_size,
           NULL),
       AZ_OK);
 
@@ -181,8 +172,6 @@ static void test_az_iot_pnp_client_twin_document_get_publish_topic_NULL_span_fai
           test_device_hostname,
           test_device_id,
           test_model_id,
-          test_component_names,
-          test_component_names_size,
           NULL),
       AZ_OK);
 
@@ -202,8 +191,6 @@ static void test_az_iot_pnp_client_twin_document_get_publish_topic_NULL_out_span
           test_device_hostname,
           test_device_id,
           test_model_id,
-          test_component_names,
-          test_component_names_size,
           NULL),
       AZ_OK);
 
@@ -232,8 +219,6 @@ static void test_az_iot_pnp_client_twin_patch_get_publish_topic_invalid_request_
           test_device_hostname,
           test_device_id,
           test_model_id,
-          test_component_names,
-          test_component_names_size,
           NULL),
       AZ_OK);
 
@@ -258,8 +243,6 @@ static void test_az_iot_pnp_client_twin_patch_get_publish_topic_NULL_char_buf_fa
           test_device_hostname,
           test_device_id,
           test_model_id,
-          test_component_names,
-          test_component_names_size,
           NULL),
       AZ_OK);
 
@@ -279,8 +262,6 @@ static void test_az_iot_pnp_client_twin_patch_get_publish_topic_NULL_out_span_fa
           test_device_hostname,
           test_device_id,
           test_model_id,
-          test_component_names,
-          test_component_names_size,
           NULL),
       AZ_OK);
 
@@ -308,8 +289,6 @@ static void test_az_iot_pnp_client_twin_parse_received_topic_NULL_rec_topic_fail
           test_device_hostname,
           test_device_id,
           test_model_id,
-          test_component_names,
-          test_component_names_size,
           NULL),
       AZ_OK);
 
@@ -328,8 +307,6 @@ static void test_az_iot_pnp_client_twin_parse_received_topic_NULL_response_fails
           test_device_hostname,
           test_device_id,
           test_model_id,
-          test_component_names,
-          test_component_names_size,
           NULL),
       AZ_OK);
 
@@ -353,8 +330,6 @@ static void test_az_iot_pnp_client_twin_property_begin_component_NULL_jw_fails()
           test_device_hostname,
           test_device_id,
           test_model_id,
-          test_component_names,
-          test_component_names_size,
           NULL),
       AZ_OK);
 
@@ -371,8 +346,6 @@ static void test_az_iot_pnp_client_twin_property_begin_component_NULL_component_
           test_device_hostname,
           test_device_id,
           test_model_id,
-          test_component_names,
-          test_component_names_size,
           NULL),
       AZ_OK);
 
@@ -397,8 +370,6 @@ static void test_az_iot_pnp_client_twin_property_end_component_NULL_jw_fails()
           test_device_hostname,
           test_device_id,
           test_model_id,
-          test_component_names,
-          test_component_names_size,
           NULL),
       AZ_OK);
 
@@ -415,8 +386,6 @@ static void test_az_iot_pnp_client_twin_property_end_component_NULL_component_na
           test_device_hostname,
           test_device_id,
           test_model_id,
-          test_component_names,
-          test_component_names_size,
           NULL),
       AZ_OK);
 
@@ -436,8 +405,6 @@ static void test_az_iot_pnp_client_twin_document_get_publish_topic_succeed()
           test_device_hostname,
           test_device_id,
           test_model_id,
-          test_component_names,
-          test_component_names_size,
           NULL),
       AZ_OK);
 
@@ -461,8 +428,6 @@ static void test_az_iot_pnp_client_twin_document_get_publish_topic_small_buffer_
           test_device_hostname,
           test_device_id,
           test_model_id,
-          test_component_names,
-          test_component_names_size,
           NULL),
       AZ_OK);
 
@@ -472,7 +437,7 @@ static void test_az_iot_pnp_client_twin_document_get_publish_topic_small_buffer_
   assert_int_equal(
       az_iot_pnp_client_twin_document_get_publish_topic(
           &client, test_device_request_id, test_buf, sizeof(test_buf), &test_length),
-      AZ_ERROR_INSUFFICIENT_SPAN_SIZE);
+      AZ_ERROR_NOT_ENOUGH_SPACE);
 }
 
 static void test_az_iot_pnp_client_twin_patch_get_publish_topic_succeed()
@@ -484,8 +449,6 @@ static void test_az_iot_pnp_client_twin_patch_get_publish_topic_succeed()
           test_device_hostname,
           test_device_id,
           test_model_id,
-          test_component_names,
-          test_component_names_size,
           NULL),
       AZ_OK);
 
@@ -509,8 +472,6 @@ static void test_az_iot_pnp_client_twin_patch_get_publish_topic_small_buffer_fai
           test_device_hostname,
           test_device_id,
           test_model_id,
-          test_component_names,
-          test_component_names_size,
           NULL),
       AZ_OK);
 
@@ -520,7 +481,7 @@ static void test_az_iot_pnp_client_twin_patch_get_publish_topic_small_buffer_fai
   assert_int_equal(
       az_iot_pnp_client_twin_patch_get_publish_topic(
           &client, test_device_request_id, test_buf, sizeof(test_buf), &test_length),
-      AZ_ERROR_INSUFFICIENT_SPAN_SIZE);
+      AZ_ERROR_NOT_ENOUGH_SPACE);
 }
 
 static void test_az_iot_pnp_client_twin_parse_received_topic_desired_found_succeed()
@@ -532,8 +493,6 @@ static void test_az_iot_pnp_client_twin_parse_received_topic_desired_found_succe
           test_device_hostname,
           test_device_id,
           test_model_id,
-          test_component_names,
-          test_component_names_size,
           NULL),
       AZ_OK);
   az_iot_pnp_client_twin_response response;
@@ -557,8 +516,6 @@ static void test_az_iot_pnp_client_twin_parse_received_topic_get_response_found_
           test_device_hostname,
           test_device_id,
           test_model_id,
-          test_component_names,
-          test_component_names_size,
           NULL),
       AZ_OK);
   az_iot_pnp_client_twin_response response;
@@ -582,8 +539,6 @@ static void test_az_iot_pnp_client_twin_parse_received_topic_reported_props_foun
           test_device_hostname,
           test_device_id,
           test_model_id,
-          test_component_names,
-          test_component_names_size,
           NULL),
       AZ_OK);
   az_iot_pnp_client_twin_response response;
@@ -607,8 +562,6 @@ static void test_az_iot_pnp_client_twin_parse_received_topic_not_found_fails()
           test_device_hostname,
           test_device_id,
           test_model_id,
-          test_component_names,
-          test_component_names_size,
           NULL),
       AZ_OK);
   az_iot_pnp_client_twin_response response;
@@ -628,8 +581,6 @@ static void test_az_iot_pnp_client_twin_parse_received_topic_not_found_prefix_fa
           test_device_hostname,
           test_device_id,
           test_model_id,
-          test_component_names,
-          test_component_names_size,
           NULL),
       AZ_OK);
   az_iot_pnp_client_twin_response response;
@@ -649,8 +600,6 @@ static void test_az_iot_pnp_client_twin_property_begin_component_succeed()
           test_device_hostname,
           test_device_id,
           test_model_id,
-          test_component_names,
-          test_component_names_size,
           NULL),
       AZ_OK);
   az_json_writer jw;
@@ -672,8 +621,6 @@ static void test_az_iot_pnp_client_twin_property_end_component_succeed()
           test_device_hostname,
           test_device_id,
           test_model_id,
-          test_component_names,
-          test_component_names_size,
           NULL),
       AZ_OK);
   az_json_writer jw;
@@ -697,8 +644,6 @@ static void test_az_iot_pnp_client_twin_property_end_component_with_user_data_su
           test_device_hostname,
           test_device_id,
           test_model_id,
-          test_component_names,
-          test_component_names_size,
           NULL),
       AZ_OK);
   az_json_writer jw;
@@ -750,8 +695,6 @@ static void test_az_iot_pnp_client_twin_logging_succeed()
           test_device_hostname,
           test_device_id,
           test_model_id,
-          test_component_names,
-          test_component_names_size,
           NULL)
       == AZ_OK);
 
@@ -776,8 +719,6 @@ static void test_az_iot_pnp_client_twin_get_next_component_succeed()
           test_device_hostname,
           test_device_id,
           test_model_id,
-          test_component_names,
-          test_component_names_size,
           NULL),
       AZ_OK);
 
@@ -863,8 +804,6 @@ static void test_az_iot_pnp_client_twin_get_next_component_long_succeed()
           test_device_hostname,
           test_device_id,
           test_model_id,
-          test_temp_component_names,
-          test_temp_component_names_size,
           NULL),
       AZ_OK);
 

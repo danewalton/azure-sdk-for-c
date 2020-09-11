@@ -28,11 +28,6 @@ static const az_span test_device_hostname = AZ_SPAN_LITERAL_FROM_STR(TEST_DEVICE
 static const az_span test_device_id = AZ_SPAN_LITERAL_FROM_STR(TEST_DEVICE_ID_STR);
 static const az_span test_model_id
     = AZ_SPAN_LITERAL_FROM_STR("dtmi:YOUR_COMPANY_NAME_HERE:sample_device;1");
-static az_span test_component_one = AZ_SPAN_LITERAL_FROM_STR("component_one");
-static az_span test_component_two = AZ_SPAN_LITERAL_FROM_STR("component_two");
-static az_span* test_component_names[] = { &test_component_one, &test_component_two };
-static const int32_t test_component_names_size
-    = sizeof(test_component_names) / sizeof(test_component_names[0]);
 static uint8_t g_expected_methods_subscribe_topic[] = "$iothub/methods/POST/#";
 
 #ifndef AZ_NO_PRECONDITION_CHECKING
@@ -62,8 +57,6 @@ static void test_az_iot_pnp_client_commands_response_get_publish_topic_NULL_out_
           test_device_hostname,
           test_device_id,
           test_model_id,
-          test_component_names,
-          test_component_names_size,
           NULL)
       == AZ_OK);
 
@@ -86,8 +79,6 @@ static void test_az_iot_pnp_client_commands_response_get_publish_topic_zero_size
           test_device_hostname,
           test_device_id,
           test_model_id,
-          test_component_names,
-          test_component_names_size,
           NULL)
       == AZ_OK);
 
@@ -110,8 +101,6 @@ static void test_az_iot_pnp_client_commands_response_get_publish_topic_EMPTY_req
           test_device_hostname,
           test_device_id,
           test_model_id,
-          test_component_names,
-          test_component_names_size,
           NULL)
       == AZ_OK);
 
@@ -135,8 +124,6 @@ test_az_iot_pnp_client_commands_response_get_publish_topic_AZ_SPAN_NULL_request_
           test_device_hostname,
           test_device_id,
           test_model_id,
-          test_component_names,
-          test_component_names_size,
           NULL)
       == AZ_OK);
 
@@ -166,8 +153,6 @@ static void test_az_iot_pnp_client_commands_parse_received_topic_EMPTY_received_
           test_device_hostname,
           test_device_id,
           test_model_id,
-          test_component_names,
-          test_component_names_size,
           NULL)
       == AZ_OK);
 
@@ -188,8 +173,6 @@ static void test_az_iot_pnp_client_commands_parse_received_topic_AZ_SPAN_NULL_re
           test_device_hostname,
           test_device_id,
           test_model_id,
-          test_component_names,
-          test_component_names_size,
           NULL)
       == AZ_OK);
 
@@ -210,8 +193,6 @@ static void test_az_iot_pnp_client_commands_parse_received_topic_NULL_out_reques
           test_device_hostname,
           test_device_id,
           test_model_id,
-          test_component_names,
-          test_component_names_size,
           NULL)
       == AZ_OK);
 
@@ -235,8 +216,6 @@ static void test_az_iot_pnp_client_commands_response_get_publish_topic_succeed()
           test_device_hostname,
           test_device_id,
           test_model_id,
-          test_component_names,
-          test_component_names_size,
           NULL)
       == AZ_OK);
 
@@ -265,8 +244,6 @@ static void test_az_iot_pnp_client_commands_response_get_publish_topic_user_stat
           test_device_hostname,
           test_device_id,
           test_model_id,
-          test_component_names,
-          test_component_names_size,
           NULL)
       == AZ_OK);
 
@@ -292,8 +269,6 @@ static void test_az_iot_pnp_client_commands_response_get_publish_topic_user_stat
           test_device_hostname,
           test_device_id,
           test_model_id,
-          test_component_names,
-          test_component_names_size,
           NULL)
       == AZ_OK);
 
@@ -307,7 +282,7 @@ static void test_az_iot_pnp_client_commands_response_get_publish_topic_user_stat
   assert_true(
       az_iot_pnp_client_commands_response_get_publish_topic(
           &client, request_id, status, test_buf, sizeof(test_buf), &test_length)
-      == AZ_ERROR_INSUFFICIENT_SPAN_SIZE);
+      == AZ_ERROR_NOT_ENOUGH_SPACE);
 }
 
 static void
@@ -323,8 +298,6 @@ test_az_iot_pnp_client_commands_response_get_publish_topic_INSUFFICIENT_BUFFER_f
           test_device_hostname,
           test_device_id,
           test_model_id,
-          test_component_names,
-          test_component_names_size,
           NULL)
       == AZ_OK);
 
@@ -334,7 +307,7 @@ test_az_iot_pnp_client_commands_response_get_publish_topic_INSUFFICIENT_BUFFER_f
   assert_true(
       az_iot_pnp_client_commands_response_get_publish_topic(
           &client, request_id, status, test_buf, sizeof(test_buf), &test_length)
-      == AZ_ERROR_INSUFFICIENT_SPAN_SIZE);
+      == AZ_ERROR_NOT_ENOUGH_SPACE);
 }
 
 static void
@@ -350,8 +323,6 @@ test_az_iot_pnp_client_commands_response_get_publish_topic_INSUFFICIENT_BUFFER_f
           test_device_hostname,
           test_device_id,
           test_model_id,
-          test_component_names,
-          test_component_names_size,
           NULL)
       == AZ_OK);
 
@@ -361,7 +332,7 @@ test_az_iot_pnp_client_commands_response_get_publish_topic_INSUFFICIENT_BUFFER_f
   assert_true(
       az_iot_pnp_client_commands_response_get_publish_topic(
           &client, request_id, status, test_buf, sizeof(test_buf), &test_length)
-      == AZ_ERROR_INSUFFICIENT_SPAN_SIZE);
+      == AZ_ERROR_NOT_ENOUGH_SPACE);
 }
 
 static void
@@ -377,8 +348,6 @@ test_az_iot_pnp_client_commands_response_get_publish_topic_INSUFFICIENT_BUFFER_f
           test_device_hostname,
           test_device_id,
           test_model_id,
-          test_component_names,
-          test_component_names_size,
           NULL)
       == AZ_OK);
 
@@ -388,7 +357,7 @@ test_az_iot_pnp_client_commands_response_get_publish_topic_INSUFFICIENT_BUFFER_f
   assert_true(
       az_iot_pnp_client_commands_response_get_publish_topic(
           &client, request_id, status, test_buf, sizeof(test_buf), &test_length)
-      == AZ_ERROR_INSUFFICIENT_SPAN_SIZE);
+      == AZ_ERROR_NOT_ENOUGH_SPACE);
 }
 
 static void test_az_iot_pnp_client_commands_parse_received_topic_succeed()
@@ -400,8 +369,6 @@ static void test_az_iot_pnp_client_commands_parse_received_topic_succeed()
           test_device_hostname,
           test_device_id,
           test_model_id,
-          test_component_names,
-          test_component_names_size,
           NULL)
       == AZ_OK);
 
@@ -434,8 +401,6 @@ static void test_az_iot_pnp_client_commands_parse_received_topic_with_component_
           test_device_hostname,
           test_device_id,
           test_model_id,
-          test_component_names,
-          test_component_names_size,
           NULL)
       == AZ_OK);
 
@@ -469,8 +434,6 @@ static void test_az_iot_pnp_client_commands_parse_received_topic_c2d_topic_fail(
           test_device_hostname,
           test_device_id,
           test_model_id,
-          test_component_names,
-          test_component_names_size,
           NULL)
       == AZ_OK);
 
@@ -495,8 +458,6 @@ static void test_az_iot_pnp_client_commands_parse_received_topic_get_twin_topic_
           test_device_hostname,
           test_device_id,
           test_model_id,
-          test_component_names,
-          test_component_names_size,
           NULL)
       == AZ_OK);
 
@@ -518,8 +479,6 @@ static void test_az_iot_pnp_client_commands_parse_received_topic_twin_patch_topi
           test_device_hostname,
           test_device_id,
           test_model_id,
-          test_component_names,
-          test_component_names_size,
           NULL)
       == AZ_OK);
 
@@ -541,8 +500,6 @@ static void test_az_iot_pnp_client_commands_parse_received_topic_topic_filter_fa
           test_device_hostname,
           test_device_id,
           test_model_id,
-          test_component_names,
-          test_component_names_size,
           NULL)
       == AZ_OK);
 
@@ -565,8 +522,6 @@ static void test_az_iot_pnp_client_commands_parse_received_topic_response_topic_
           test_device_hostname,
           test_device_id,
           test_model_id,
-          test_component_names,
-          test_component_names_size,
           NULL)
       == AZ_OK);
 
@@ -614,8 +569,6 @@ static void test_az_iot_pnp_client_commands_logging_succeed()
           test_device_hostname,
           test_device_id,
           test_model_id,
-          test_component_names,
-          test_component_names_size,
           NULL)
       == AZ_OK);
 
