@@ -87,37 +87,59 @@ static void handle_device_twin_message(
     az_json_reader_init(&jr, twin_message_span, NULL);
 
     az_result result;
-    while (az_result_succeeded(result = az_iot_pnp_client_twin_get_next_component(
-          &pnp_client, &jr, !is_twin_get, &component_name, &version_num)))
+    while (az_result_succeeded(
+        result = az_iot_pnp_client_twin_get_next_component(
+            &pnp_client, &jr, !is_twin_get, &component_name, &version_num)))
     {
       if (result == AZ_OK)
       {
-        az_iot_pnp_client_twin_get_next_component_property(
-            &pnp_client, &jr, &property_name, &property_value);
-        if (az_json_token_is_text_equal(&component_name, thermostat_1_name))
+        while (az_result_succeeded(
+            result = az_iot_pnp_client_twin_get_next_component_property(
+                &pnp_client, &jr, &property_name, &property_value)))
         {
-          thermostat_process_property_update(component_name, property_name, &property_value);
-        }
-        else if (az_json_token_is_text_equal(&component_name, thermostat_2_name))
-        {
-          thermostat_process_property_update(component_name, property_name, &property_value);
-        }
-        else if (az_json_token_is_text_equal(&component_name, device_info_name))
-        {
-          // device_info_process_property_update(component_name, property_name, &property_value);
+          if (result = AZ_OK)
+          {
+            if (az_json_token_is_text_equal(&component_name, thermostat_1_name))
+            {
+              // Update this property
+            }
+            else if (az_json_token_is_text_equal(&component_name, thermostat_2_name))
+            {
+              // Update this property
+            }
+            else if (az_json_token_is_text_equal(&component_name, device_info_name))
+            {
+              // Update this property
+            }
+          }
+          else if (result == AZ_IOT_END_OF_PROPERTIES)
+          {
+            // There are no more properties for this component. Break and find the next component.
+            break;
+          }
+          else
+          {
+            // There was some error and it should be returned.
+            return result;
+          }
+          
         }
       }
       else if (result == AZ_IOT_ITEM_NOT_COMPONENT)
       {
-        az_iot_pnp_client_twin_get_next_component_property(
+        // This next property is not a part of a component.
+        result = az_iot_pnp_client_twin_get_next_component_property(
             &pnp_client, &jr, &property_name, &property_value);
+        // Handle the property_name and property_value
       }
       else if (result == AZ_IOT_END_OF_COMPONENTS)
       {
+        // There are no more components to read. End of the property document.
         break;
       }
       else
       {
+        // There was some error and it should be returned
         return result;
       }
     }
