@@ -45,8 +45,6 @@ typedef struct
   az_span module_id; /**< The module name (if a module identity is used). */
   az_span user_agent; /**< The user-agent is a formatted string that will be used for Azure IoT
                          usage statistics. */
-  az_span model_id; /**< The model id used to identify the capabilities of a device based on the
-                       Digital Twin document. */
   az_span**
       component_names; /**< The component array containing #az_span's with names of the components*/
   int32_t component_names_size; /**< The number of component names in the `component_names` array*/
@@ -61,6 +59,7 @@ typedef struct
   {
     az_span iot_hub_hostname;
     az_span device_id;
+    az_span model_id;
     az_iot_hub_client_options options;
   } _internal;
 } az_iot_hub_client;
@@ -85,6 +84,8 @@ AZ_NODISCARD az_iot_hub_client_options az_iot_hub_client_options_default();
  *         - `%` : `%25`
  *         - `#` : `%23`
  *         - `&` : `%26`
+ * @param[in] model_id The model id used to identify the capabilities of a device based on the
+ * Digital Twin document.
  * @param[in] options A reference to an #az_iot_hub_client_options structure. If `NULL` is passed,
  * the hub client will use the default options. If using custom options, please initialize first by
  * calling az_iot_hub_client_options_default() and then populating relevant options with your own
@@ -95,6 +96,7 @@ AZ_NODISCARD az_result az_iot_hub_client_init(
     az_iot_hub_client* client,
     az_span iot_hub_hostname,
     az_span device_id,
+    az_span model_id,
     az_iot_hub_client_options const* options);
 
 /**
