@@ -33,7 +33,6 @@ static az_span const twin_desired_temperature_property_name
 static az_span const twin_reported_maximum_temperature_property_name
     = AZ_SPAN_LITERAL_FROM_STR("maxTempSinceLastReboot");
 static az_span const twin_response_success = AZ_SPAN_LITERAL_FROM_STR("success");
-// static az_span const twin_response_failed = AZ_SPAN_LITERAL_FROM_STR("failed");
 
 // IoT Hub Commands Values
 static az_span const command_getMaxMinReport_name = AZ_SPAN_LITERAL_FROM_STR("getMaxMinReport");
@@ -207,45 +206,6 @@ void pnp_thermostat_build_maximum_temperature_reported_property(
 
   *out_payload = az_json_writer_get_bytes_used_in_destination(&jw);
 }
-
-// void pnp_thermostat_build_error_reported_property_with_status(
-//     az_iot_pnp_client* pnp_client,
-//     az_span component_name,
-//     az_span property_name,
-//     az_json_reader* property_value,
-//     az_iot_status status,
-//     int32_t version,
-//     az_span payload,
-//     az_span* out_payload)
-// {
-//   az_result rc;
-
-//   az_json_writer jw;
-//   rc = az_json_writer_init(&jw, payload, NULL);
-
-//   rc = az_iot_pnp_client_twin_begin_property_with_status(&pnp_client, &jw, component_name, property_name);
-
-//   rc = az_json_writer_append_double(&jw, property_value, );
-
-//   rc = az_iot_pnp_client_twin_end_property_with_status(&pnp_client, &jw, component_name, status, version, twin_response_failed);
-
-//   if (az_result_failed(
-//           rc = pnp_build_reported_property_with_status(
-//               payload,
-//               component_name,
-//               property_name,
-//               append_double_callback,
-//               (void*)property_value,
-//               (int32_t)status,
-//               version,
-//               twin_response_failed,
-//               out_payload)))
-//   {
-//     IOT_SAMPLE_LOG_ERROR(
-//         "Failed to build Temperature Sensor error payload: az_result return code 0x%08x.", rc);
-//     exit(rc);
-//   }
-// }
 
 az_result pnp_thermostat_process_property_update(
     az_iot_pnp_client* pnp_client,
