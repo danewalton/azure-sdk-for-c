@@ -14,11 +14,7 @@
 #include <azure/core/az_span.h>
 #include <azure/iot/az_iot_hub_client.h>
 
-// Property values
-static char pnp_properties_buffer[64];
-
 // Device twin values
-static az_span const component_telemetry_prop_span = AZ_SPAN_LITERAL_FROM_STR("$.sub");
 static az_span const desired_temp_response_value_name = AZ_SPAN_LITERAL_FROM_STR("value");
 static az_span const desired_temp_ack_code_name = AZ_SPAN_LITERAL_FROM_STR("ac");
 static az_span const desired_temp_ack_version_name = AZ_SPAN_LITERAL_FROM_STR("av");
@@ -139,40 +135,6 @@ static az_result is_component_in_model(
   }
 
   return AZ_ERROR_UNEXPECTED_CHAR;
-}
-
-az_result pnp_telemetry_get_publish_topic(
-    az_iot_hub_client const* client,
-    az_iot_message_properties* properties,
-    az_span component_name,
-    char* out_mqtt_topic,
-    size_t mqtt_topic_size,
-    size_t* out_mqtt_topic_length)
-{
-  az_iot_message_properties pnp_properties;
-
-  if (az_span_size(component_name) != 0)
-  {
-    if (properties == NULL)
-    {
-      properties = &pnp_properties;
-
-      IOT_SAMPLE_RETURN_IF_FAILED(az_iot_message_properties_init(
-          properties, AZ_SPAN_FROM_BUFFER(pnp_properties_buffer), 0));
-    }
-
-    IOT_SAMPLE_RETURN_IF_FAILED(az_iot_message_properties_append(
-        properties, component_telemetry_prop_span, component_name));
-  }
-
-  IOT_SAMPLE_RETURN_IF_FAILED(az_iot_hub_client_telemetry_get_publish_topic(
-      client,
-      az_span_size(component_name) != 0 ? properties : NULL,
-      out_mqtt_topic,
-      mqtt_topic_size,
-      out_mqtt_topic_length));
-
-  return AZ_OK;
 }
 
 void pnp_parse_command_name(

@@ -343,11 +343,7 @@ static void create_and_configure_mqtt_client(void)
     exit(rc);
   }
 
-  // Initialize the hub client with the connection options.
-  az_iot_hub_client_options options = az_iot_hub_client_options_default();
-  options.model_id = model_id;
-
-  rc = az_iot_hub_client_init(&hub_client, env_vars.hub_hostname, env_vars.hub_device_id, &options);
+  rc = az_iot_hub_client_init(&hub_client, env_vars.hub_hostname, env_vars.hub_device_id, model_id, NULL);
   if (az_result_failed(rc))
   {
     IOT_SAMPLE_LOG_ERROR("Failed to initialize hub client: az_result return code 0x%08x.", rc);
@@ -900,10 +896,10 @@ static void send_telemetry_messages(void)
 
   // Temperature Sensor 1
   // Get the Telemetry topic to publish the telemetry message.
-  rc = pnp_telemetry_get_publish_topic(
+  rc = az_iot_hub_client_telemetry_get_publish_topic(
       &hub_client,
-      NULL,
       thermostat_1.component_name,
+      NULL,
       publish_message.topic,
       publish_message.topic_length,
       NULL);
@@ -925,10 +921,10 @@ static void send_telemetry_messages(void)
 
   // Temperature Sensor 2
   // Get the Telemetry topic to publish the telemetry message.
-  rc = pnp_telemetry_get_publish_topic(
+  rc = az_iot_hub_client_telemetry_get_publish_topic(
       &hub_client,
-      NULL,
       thermostat_2.component_name,
+      NULL,
       publish_message.topic,
       publish_message.topic_length,
       NULL);
@@ -950,8 +946,8 @@ static void send_telemetry_messages(void)
 
   // Temperature Controller
   // Get the Telemetry topic to publish the telemetry message.
-  rc = pnp_telemetry_get_publish_topic(
-      &hub_client, NULL, AZ_SPAN_EMPTY, publish_message.topic, publish_message.topic_length, NULL);
+  rc = az_iot_hub_client_telemetry_get_publish_topic(
+      &hub_client, AZ_SPAN_EMPTY, NULL, publish_message.topic, publish_message.topic_length, NULL);
   if (az_result_failed(rc))
   {
     IOT_SAMPLE_LOG_ERROR("Failed to get the Telemetry topic: az_result return code 0x%08x.", rc);
