@@ -27,7 +27,6 @@
 
 #include "pnp/pnp_device_info_component.h"
 #include "pnp/pnp_mqtt_message.h"
-#include "pnp/pnp_protocol.h"
 #include "pnp/pnp_thermostat_component.h"
 
 #define SAMPLE_TYPE PAHO_IOT_HUB
@@ -597,7 +596,11 @@ static void receive_messages(void)
       // Build the maximum temperature reported property message.
       az_span property_name;
       pnp_thermostat_build_maximum_temperature_reported_property(
-          &thermostat_1, publish_message.payload, &publish_message.out_payload, &property_name);
+          &pnp_client,
+          &thermostat_1,
+          publish_message.payload,
+          &publish_message.out_payload,
+          &property_name);
 
       // Publish the maximum temperature reported property update.
       publish_mqtt_message(
@@ -634,7 +637,11 @@ static void receive_messages(void)
       // Build the maximum temperature reported property message.
       az_span property_name;
       pnp_thermostat_build_maximum_temperature_reported_property(
-          &thermostat_2, publish_message.payload, &publish_message.out_payload, &property_name);
+          &pnp_client,
+          &thermostat_2,
+          publish_message.payload,
+          &publish_message.out_payload,
+          &property_name);
 
       // Publish the maximum temperature reported property update.
       publish_mqtt_message(
@@ -836,6 +843,7 @@ static void process_twin_message(az_span twin_message_span, bool is_partial)
         {
           if (az_result_succeeded(
                   result = pnp_thermostat_process_property_update(
+                      &pnp_client,
                       &thermostat_1,
                       &property_name,
                       &property_value,
@@ -862,6 +870,7 @@ static void process_twin_message(az_span twin_message_span, bool is_partial)
         {
           if (az_result_succeeded(
                   result = pnp_thermostat_process_property_update(
+                      &pnp_client,
                       &thermostat_2,
                       &property_name,
                       &property_value,

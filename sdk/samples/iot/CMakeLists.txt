@@ -88,7 +88,6 @@ target_link_libraries(paho_iot_hub_pnp_sample
 add_executable (paho_iot_hub_pnp_component_sample
   ${CMAKE_CURRENT_LIST_DIR}/pnp/pnp_mqtt_message.c
   ${CMAKE_CURRENT_LIST_DIR}/pnp/pnp_device_info_component.c
-  ${CMAKE_CURRENT_LIST_DIR}/pnp/pnp_protocol.c
   ${CMAKE_CURRENT_LIST_DIR}/pnp/pnp_thermostat_component.c
   ${CMAKE_CURRENT_LIST_DIR}/paho_iot_hub_pnp_component_sample.c
 )
