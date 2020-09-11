@@ -115,7 +115,7 @@ _Example:_
 
 ```C
     az_iot_hub_client_c2d_request c2d_request;
-    az_iot_hub_client_method_request method_request;
+    az_iot_hub_client_command_request method_request;
     az_iot_hub_client_twin_response twin_response;
 
     //az_span received_topic is filled by the application.
@@ -126,11 +126,11 @@ _Example:_
         //  c2d_request.properties contain the properties of the message.
         //  the MQTT message payload contains the data.
     }
-    else if (az_result_succeeded(ret = az_iot_hub_client_methods_parse_received_topic(client, received_topic, &method_request)))
+    else if (az_result_succeeded(ret = az_iot_hub_client_commands_parse_received_topic(client, received_topic, &method_request)))
     {
         // This is a Method request:
         //  method_request.name contains the method
-        //  method_request.request_id contains the request ID that must be used to submit the response using az_iot_hub_client_methods_response_get_publish_topic()
+        //  method_request.request_id contains the request ID that must be used to submit the response using az_iot_hub_client_commands_response_get_publish_topic()
     }
     else if (az_result_succeeded(ret = az_iot_hub_client_twin_parse_received_topic(client, received_topic, &twin_response)))
     {

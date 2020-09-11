@@ -104,7 +104,7 @@ static void handle_device_twin_message(
     az_iot_hub_client_twin_response const* twin_response);
 static void handle_command_request(
     MQTTClient_message const* receive_message,
-    az_iot_hub_client_method_request const* command_request);
+    az_iot_hub_client_command_request const* command_request);
 static void send_telemetry_messages(void);
 
 // Temperature controller functions
@@ -749,7 +749,7 @@ static void on_message_received(
       = az_span_create((uint8_t*)receive_message->payload, receive_message->payloadlen);
 
   az_iot_hub_client_twin_response twin_response;
-  az_iot_hub_client_method_request command_request;
+  az_iot_hub_client_command_request command_request;
 
   // Parse the incoming message topic and handle appropriately.
   rc = az_iot_hub_client_twin_parse_received_topic(&hub_client, topic_span, &twin_response);
@@ -764,7 +764,7 @@ static void on_message_received(
   }
   else
   {
-    rc = az_iot_hub_client_methods_parse_received_topic(&hub_client, topic_span, &command_request);
+    rc = az_iot_hub_client_commands_parse_received_topic(&hub_client, topic_span, &command_request);
     if (az_result_succeeded(rc))
     {
       IOT_SAMPLE_LOG_SUCCESS("Client received a valid topic response.");
@@ -815,7 +815,7 @@ static void handle_device_twin_message(
 
 static void handle_command_request(
     MQTTClient_message const* receive_message,
-    az_iot_hub_client_method_request const* command_request)
+    az_iot_hub_client_command_request const* command_request)
 {
   az_span component_name;
   az_span command_name;
@@ -872,7 +872,7 @@ static void handle_command_request(
   }
 
   // Get the Methods response topic to publish the command response.
-  az_result rc = az_iot_hub_client_methods_response_get_publish_topic(
+  az_result rc = az_iot_hub_client_commands_response_get_publish_topic(
       &hub_client,
       command_request->request_id,
       (uint16_t)status,

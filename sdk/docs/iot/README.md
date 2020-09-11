@@ -295,10 +295,10 @@ void handle_iot_message(mqtt_client_message* msg)
   az_span incoming_topic = az_span_create(msg->topic, msg->topic_len);
 
   //The message could be for three features so parse the topic to see which it is for
-  az_iot_hub_client_method_request method_request;
+  az_iot_hub_client_command_request method_request;
   az_iot_hub_client_c2d_request c2d_request;
   az_iot_hub_client_twin_response twin_response;
-  if (az_result_succeeded(az_iot_hub_client_methods_parse_received_topic(&client, incoming_topic, &method_request)))
+  if (az_result_succeeded(az_iot_hub_client_commands_parse_received_topic(&client, incoming_topic, &method_request)))
   {
     //Handle the method request
   }

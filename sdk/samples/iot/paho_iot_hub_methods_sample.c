@@ -50,11 +50,11 @@ static void parse_method_message(
     char* topic,
     int topic_len,
     MQTTClient_message const* message,
-    az_iot_hub_client_method_request* out_method_request);
-static void handle_method_request(az_iot_hub_client_method_request const* method_request);
+    az_iot_hub_client_command_request* out_method_request);
+static void handle_method_request(az_iot_hub_client_command_request const* method_request);
 static az_span invoke_ping(void);
 static void send_method_response(
-    az_iot_hub_client_method_request const* request,
+    az_iot_hub_client_command_request const* request,
     az_iot_status status,
     az_span response);
 
@@ -235,7 +235,7 @@ static void receive_method_messages(void)
         "Message #%d: Client received a method request from the service.", message_count + 1);
 
     // Parse method message and invoke method.
-    az_iot_hub_client_method_request method_request;
+    az_iot_hub_client_command_request method_request;
     parse_method_message(topic, topic_len, message, &method_request);
     IOT_SAMPLE_LOG_SUCCESS("Client parsed method request.");
 
@@ -265,14 +265,14 @@ static void parse_method_message(
     char* topic,
     int topic_len,
     MQTTClient_message const* message,
-    az_iot_hub_client_method_request* out_method_request)
+    az_iot_hub_client_command_request* out_method_request)
 {
   az_span const topic_span = az_span_create((uint8_t*)topic, topic_len);
   az_span const message_span = az_span_create((uint8_t*)message->payload, message->payloadlen);
 
   // Parse message and retrieve method_request info.
   az_result rc
-      = az_iot_hub_client_methods_parse_received_topic(&hub_client, topic_span, out_method_request);
+      = az_iot_hub_client_commands_parse_received_topic(&hub_client, topic_span, out_method_request);
   if (az_result_failed(rc))
   {
     IOT_SAMPLE_LOG_ERROR("Message from unknown topic: az_result return code 0x%08x.", rc);
@@ -284,7 +284,7 @@ static void parse_method_message(
   IOT_SAMPLE_LOG_AZ_SPAN("Payload:", message_span);
 }
 
-static void handle_method_request(az_iot_hub_client_method_request const* method_request)
+static void handle_method_request(az_iot_hub_client_command_request const* method_request)
 {
   if (az_span_is_content_equal(method_ping_name, method_request->name))
   {
@@ -308,7 +308,7 @@ static az_span invoke_ping(void)
 }
 
 static void send_method_response(
-    az_iot_hub_client_method_request const* method_request,
+    az_iot_hub_client_command_request const* method_request,
     az_iot_status status,
     az_span response)
 {
@@ -316,7 +316,7 @@ static void send_method_response(
 
   // Get the Methods Response topic to publish the method response.
   char methods_response_topic_buffer[128];
-  rc = az_iot_hub_client_methods_response_get_publish_topic(
+  rc = az_iot_hub_client_commands_response_get_publish_topic(
       &hub_client,
       method_request->request_id,
       (uint16_t)status,

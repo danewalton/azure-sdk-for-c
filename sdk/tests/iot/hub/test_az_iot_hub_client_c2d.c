@@ -61,7 +61,7 @@ static void test_az_iot_hub_client_c2d_parse_received_topic_AZ_SPAN_EMPTY_receiv
   az_iot_hub_client client;
   az_iot_hub_client_options options = az_iot_hub_client_options_default();
   assert_true(
-      az_iot_hub_client_init(&client, test_device_hostname, test_device_id, &options) == AZ_OK);
+      az_iot_hub_client_init(&client, test_device_hostname, test_device_id, AZ_SPAN_EMPTY, &options) == AZ_OK);
 
   az_span received_topic = AZ_SPAN_EMPTY;
 
@@ -76,7 +76,7 @@ static void test_az_iot_hub_client_c2d_parse_received_topic_NULL_out_request_fai
   az_iot_hub_client client;
   az_iot_hub_client_options options = az_iot_hub_client_options_default();
   assert_true(
-      az_iot_hub_client_init(&client, test_device_hostname, test_device_id, &options) == AZ_OK);
+      az_iot_hub_client_init(&client, test_device_hostname, test_device_id, AZ_SPAN_EMPTY, &options) == AZ_OK);
 
   az_span received_topic = test_url_decoded_topic;
 
@@ -91,7 +91,7 @@ static void test_az_iot_hub_client_c2d_parse_received_topic_url_decoded_succeed(
   az_iot_hub_client client;
   az_iot_hub_client_options options = az_iot_hub_client_options_default();
   assert_true(
-      az_iot_hub_client_init(&client, test_device_hostname, test_device_id, &options) == AZ_OK);
+      az_iot_hub_client_init(&client, test_device_hostname, test_device_id, AZ_SPAN_EMPTY, &options) == AZ_OK);
 
   az_span received_topic = test_url_decoded_topic;
 
@@ -122,7 +122,7 @@ static void test_az_iot_hub_client_c2d_parse_received_topic_url_encoded_succeed(
   az_iot_hub_client client;
   az_iot_hub_client_options options = az_iot_hub_client_options_default();
   assert_true(
-      az_iot_hub_client_init(&client, test_device_hostname, test_device_id, &options) == AZ_OK);
+      az_iot_hub_client_init(&client, test_device_hostname, test_device_id, AZ_SPAN_EMPTY, &options) == AZ_OK);
 
   az_span received_topic = test_url_encoded_topic;
 
@@ -156,7 +156,7 @@ static void test_az_iot_hub_client_c2d_parse_received_topic_no_props_succeed()
   az_iot_hub_client client;
   az_iot_hub_client_options options = az_iot_hub_client_options_default();
   assert_true(
-      az_iot_hub_client_init(&client, test_device_hostname, test_device_id, &options) == AZ_OK);
+      az_iot_hub_client_init(&client, test_device_hostname, test_device_id, AZ_SPAN_EMPTY, &options) == AZ_OK);
 
   az_iot_hub_client_c2d_request out_request;
 
@@ -169,7 +169,7 @@ static void test_az_iot_hub_client_c2d_parse_received_topic_reject()
   az_iot_hub_client client;
   az_iot_hub_client_options options = az_iot_hub_client_options_default();
   assert_true(
-      az_iot_hub_client_init(&client, test_device_hostname, test_device_id, &options) == AZ_OK);
+      az_iot_hub_client_init(&client, test_device_hostname, test_device_id, AZ_SPAN_EMPTY, &options) == AZ_OK);
 
   az_span received_topic = test_parse_method_topic_fail;
 
@@ -185,7 +185,7 @@ static void test_az_iot_hub_client_c2d_parse_received_topic_malformed_reject()
   az_iot_hub_client client;
   az_iot_hub_client_options options = az_iot_hub_client_options_default();
   assert_true(
-      az_iot_hub_client_init(&client, test_device_hostname, test_device_id, &options) == AZ_OK);
+      az_iot_hub_client_init(&client, test_device_hostname, test_device_id, AZ_SPAN_EMPTY, &options) == AZ_OK);
 
   az_span received_topic = AZ_SPAN_FROM_STR("devices/useragent_c/message#$vicebound/a=1");
 
@@ -221,7 +221,7 @@ static void test_az_iot_hub_client_c2d_logging_succeed()
   _log_invoked_topic = 0;
 
   az_iot_hub_client client;
-  assert_true(az_iot_hub_client_init(&client, test_device_hostname, test_device_id, NULL) == AZ_OK);
+  assert_true(az_iot_hub_client_init(&client, test_device_hostname, test_device_id, AZ_SPAN_EMPTY, NULL) == AZ_OK);
 
   az_iot_hub_client_c2d_request out_request;
   assert_int_equal(
@@ -243,7 +243,7 @@ static void test_az_iot_hub_client_c2d_no_logging_succeed()
   _log_invoked_topic = 0;
 
   az_iot_hub_client client;
-  assert_true(az_iot_hub_client_init(&client, test_device_hostname, test_device_id, NULL) == AZ_OK);
+  assert_true(az_iot_hub_client_init(&client, test_device_hostname, test_device_id, AZ_SPAN_EMPTY, NULL) == AZ_OK);
 
   az_iot_hub_client_c2d_request out_request;
   assert_int_equal(

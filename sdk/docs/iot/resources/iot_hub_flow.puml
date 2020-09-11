@@ -31,7 +31,7 @@ az_iot_hub_client_telemetry_get_publish_topic --> application_mqtt_publish
 
 application_mqtt_connect --> application_mqtt_subscribe
 
-az_iot_hub_client_methods_response_get_publish_topic --> application_mqtt_publish
+az_iot_hub_client_commands_response_get_publish_topic --> application_mqtt_publish
 
 application_mqtt_subscribe --> az_iot_hub_client_twin_document_get_publish_topic
 az_iot_hub_client_twin_document_get_publish_topic --> application_mqtt_publish
@@ -48,18 +48,18 @@ state application_mqtt_publish <<APP>>
 state application_mqtt_receive <<APP>> { 
 ' Callback delegating handler:
     [*] --> az_iot_hub_client_c2d_parse_received_topic : Received PUBLISH message
-    az_iot_hub_client_c2d_parse_received_topic --> az_iot_hub_client_methods_parse_received_topic : not c2d related
-    az_iot_hub_client_methods_parse_received_topic --> az_iot_hub_client_twin_parse_received_topic : not methods related
+    az_iot_hub_client_c2d_parse_received_topic --> az_iot_hub_client_commands_parse_received_topic : not c2d related
+    az_iot_hub_client_commands_parse_received_topic --> az_iot_hub_client_twin_parse_received_topic : not methods related
     az_iot_hub_client_twin_parse_received_topic --> [*] : not twin related
 
 ' C2D
     az_iot_hub_client_c2d_parse_received_topic -> az_iot_hub_client_c2d_request : c2d call received
     
 ' Methods:
-    az_iot_hub_client_methods_parse_received_topic -> az_iot_hub_client_method_request : method call received
-    az_iot_hub_client_method_request -> application_method_handle
+    az_iot_hub_client_commands_parse_received_topic -> az_iot_hub_client_command_request : method call received
+    az_iot_hub_client_command_request -> application_method_handle
     state application_method_handle <<APP>>
-    application_method_handle -> az_iot_hub_client_methods_response_get_publish_topic
+    application_method_handle -> az_iot_hub_client_commands_response_get_publish_topic
     
 ' Twin
     az_iot_hub_client_twin_parse_received_topic -> az_iot_hub_client_twin_response : twin GET or PATCH received
@@ -76,12 +76,12 @@ az_iot_hub_client_sas_get_password: - key_name
 
 az_iot_hub_client_telemetry_get_publish_topic : - az_iot_message_properties
 
-state az_iot_hub_client_method_request <<STRUCT>>
-az_iot_hub_client_method_request: - request_id
-az_iot_hub_client_method_request: - name
+state az_iot_hub_client_command_request <<STRUCT>>
+az_iot_hub_client_command_request: - request_id
+az_iot_hub_client_command_request: - name
 
-az_iot_hub_client_methods_response_get_publish_topic: - request_id
-az_iot_hub_client_methods_response_get_publish_topic: - status
+az_iot_hub_client_commands_response_get_publish_topic: - request_id
+az_iot_hub_client_commands_response_get_publish_topic: - status
 
 state az_iot_hub_client_c2d_request <<STRUCT>>
 az_iot_hub_client_c2d_request : - az_iot_message_properties

@@ -21,10 +21,10 @@ static const az_span methods_topic_filter_suffix = AZ_SPAN_LITERAL_FROM_STR("POS
 static const az_span methods_response_topic_result = AZ_SPAN_LITERAL_FROM_STR("res/");
 static const az_span methods_response_topic_properties = AZ_SPAN_LITERAL_FROM_STR("/?$rid=");
 
-AZ_NODISCARD az_result az_iot_hub_client_methods_parse_received_topic(
+AZ_NODISCARD az_result az_iot_hub_client_commands_parse_received_topic(
     az_iot_hub_client const* client,
     az_span received_topic,
-    az_iot_hub_client_method_request* out_request)
+    az_iot_hub_client_command_request* out_request)
 {
   _az_PRECONDITION_NOT_NULL(client);
   _az_PRECONDITION_VALID_SPAN(received_topic, 1, false);
@@ -75,7 +75,7 @@ AZ_NODISCARD az_result az_iot_hub_client_methods_parse_received_topic(
   return AZ_OK;
 }
 
-AZ_NODISCARD az_result az_iot_hub_client_methods_response_get_publish_topic(
+AZ_NODISCARD az_result az_iot_hub_client_commands_response_get_publish_topic(
     az_iot_hub_client const* client,
     az_span request_id,
     uint16_t status,

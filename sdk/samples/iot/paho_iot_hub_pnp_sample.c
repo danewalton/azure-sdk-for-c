@@ -128,9 +128,9 @@ static void send_reported_property(az_span name, double value, int32_t version, 
 // Command functions
 static void handle_command_request(
     MQTTClient_message const* message,
-    az_iot_hub_client_method_request const* command_request);
+    az_iot_hub_client_command_request const* command_request);
 static void send_command_response(
-    az_iot_hub_client_method_request const* command_request,
+    az_iot_hub_client_command_request const* command_request,
     az_iot_status status,
     az_span response);
 static az_result invoke_getMaxMinReport(az_span payload, az_span response, az_span* out_response);
@@ -500,7 +500,7 @@ static void on_message_received(char* topic, int topic_len, MQTTClient_message c
   az_span const message_span = az_span_create((uint8_t*)message->payload, message->payloadlen);
 
   az_iot_hub_client_twin_response twin_response;
-  az_iot_hub_client_method_request command_request;
+  az_iot_hub_client_command_request command_request;
 
   // Parse the incoming message topic and handle appropriately.
   rc = az_iot_hub_client_twin_parse_received_topic(&hub_client, topic_span, &twin_response);
@@ -515,7 +515,7 @@ static void on_message_received(char* topic, int topic_len, MQTTClient_message c
   }
   else
   {
-    rc = az_iot_hub_client_methods_parse_received_topic(&hub_client, topic_span, &command_request);
+    rc = az_iot_hub_client_commands_parse_received_topic(&hub_client, topic_span, &command_request);
     if (az_result_succeeded(rc))
     {
       IOT_SAMPLE_LOG_SUCCESS("Client received a valid topic response.");
@@ -790,7 +790,7 @@ static void send_reported_property(az_span name, double value, int32_t version, 
 
 static void handle_command_request(
     MQTTClient_message const* message,
-    az_iot_hub_client_method_request const* command_request)
+    az_iot_hub_client_command_request const* command_request)
 {
   az_span const message_span = az_span_create((uint8_t*)message->payload, message->payloadlen);
 
@@ -821,7 +821,7 @@ static void handle_command_request(
 }
 
 static void send_command_response(
-    az_iot_hub_client_method_request const* command_request,
+    az_iot_hub_client_command_request const* command_request,
     az_iot_status status,
     az_span response)
 {
@@ -829,7 +829,7 @@ static void send_command_response(
 
   // Get the Methods response topic to publish the command response.
   char methods_response_topic_buffer[128];
-  rc = az_iot_hub_client_methods_response_get_publish_topic(
+  rc = az_iot_hub_client_commands_response_get_publish_topic(
       &hub_client,
       command_request->request_id,
       (uint16_t)status,

@@ -30,13 +30,15 @@ AZ_NODISCARD az_iot_hub_client_options az_iot_hub_client_options_default()
 {
   return (az_iot_hub_client_options){ .module_id = AZ_SPAN_EMPTY,
                                       .user_agent = client_sdk_version,
-                                      .model_id = AZ_SPAN_EMPTY };
+                                      .component_names = NULL,
+                                      .component_names_size = 0 };
 }
 
 AZ_NODISCARD az_result az_iot_hub_client_init(
     az_iot_hub_client* client,
     az_span iot_hub_hostname,
     az_span device_id,
+    az_span model_id,
     az_iot_hub_client_options const* options)
 {
   _az_PRECONDITION_NOT_NULL(client);
@@ -45,6 +47,7 @@ AZ_NODISCARD az_result az_iot_hub_client_init(
 
   client->_internal.iot_hub_hostname = iot_hub_hostname;
   client->_internal.device_id = device_id;
+  client->_internal.model_id = model_id;
   client->_internal.options = options == NULL ? az_iot_hub_client_options_default() : *options;
 
   return AZ_OK;
@@ -62,7 +65,7 @@ AZ_NODISCARD az_result az_iot_hub_client_get_user_name(
 
   const az_span* const module_id = &(client->_internal.options.module_id);
   const az_span* const user_agent = &(client->_internal.options.user_agent);
-  const az_span* const model_id = &(client->_internal.options.model_id);
+  const az_span* const model_id = &(client->_internal.model_id);
 
   az_span mqtt_user_name_span
       = az_span_create((uint8_t*)mqtt_user_name, (int32_t)mqtt_user_name_size);

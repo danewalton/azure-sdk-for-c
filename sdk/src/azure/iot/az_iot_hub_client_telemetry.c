@@ -14,11 +14,13 @@
 
 static const uint8_t null_terminator = '\0';
 static const az_span telemetry_topic_prefix = AZ_SPAN_LITERAL_FROM_STR("devices/");
+static const az_span telemetry_component_prop_span = AZ_SPAN_LITERAL_FROM_STR("$.sub=");
 static const az_span telemetry_topic_modules_mid = AZ_SPAN_LITERAL_FROM_STR("/modules/");
 static const az_span telemetry_topic_suffix = AZ_SPAN_LITERAL_FROM_STR("/messages/events/");
 
 AZ_NODISCARD az_result az_iot_hub_client_telemetry_get_publish_topic(
     az_iot_hub_client const* client,
+    az_span component_name,
     az_iot_message_properties const* properties,
     char* mqtt_topic,
     size_t mqtt_topic_size,
@@ -34,9 +36,15 @@ AZ_NODISCARD az_result az_iot_hub_client_telemetry_get_publish_topic(
   int32_t required_length = az_span_size(telemetry_topic_prefix)
       + az_span_size(client->_internal.device_id) + az_span_size(telemetry_topic_suffix);
   int32_t module_id_length = az_span_size(*module_id);
+  int32_t component_name_length = az_span_size(component_name);
   if (module_id_length > 0)
   {
     required_length += az_span_size(telemetry_topic_modules_mid) + module_id_length;
+  }
+  if (component_name_length > 0)
+  {
+    required_length += component_name_length + az_span_size(telemetry_component_prop_span)
+        + (properties != NULL ? 1 : 0); // Parameter separator
   }
   if (properties != NULL)
   {
@@ -56,6 +64,16 @@ AZ_NODISCARD az_result az_iot_hub_client_telemetry_get_publish_topic(
   }
 
   remainder = az_span_copy(remainder, telemetry_topic_suffix);
+
+  if (component_name_length > 0)
+  {
+    remainder = az_span_copy(remainder, telemetry_component_prop_span);
+    remainder = az_span_copy(remainder, component_name);
+    if (properties != NULL)
+    {
+      remainder = az_span_copy_u8(remainder, '&');
+    }
+  }
 
   if (properties != NULL)
   {
