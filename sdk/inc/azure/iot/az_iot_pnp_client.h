@@ -66,7 +66,7 @@ AZ_NODISCARD az_iot_pnp_client_options az_iot_pnp_client_options_default();
  * @param[in] device_id The Device ID.
  * @param[in] model_id The root interface of the #az_iot_pnp_client.
  * @param[in] options A reference to an #az_iot_pnp_client_options structure. Can be NULL.
- * @return #az_result
+ * @return An #az_result value indicating the result of the operation.
  */
 AZ_NODISCARD az_result az_iot_pnp_client_init(
     az_iot_pnp_client* client,
@@ -102,7 +102,7 @@ AZ_NODISCARD az_result az_iot_pnp_client_init(
  * @param[in] mqtt_user_name_size The size, in bytes of \p mqtt_user_name.
  * @param[out] out_mqtt_user_name_length __[nullable]__ Contains the string length, in bytes, of
  *                                                      \p mqtt_user_name. Can be `NULL`.
- * @return #az_result
+ * @return An #az_result value indicating the result of the operation.
  */
 AZ_NODISCARD AZ_INLINE az_result az_iot_pnp_client_get_user_name(
     az_iot_pnp_client const* client,
@@ -130,7 +130,7 @@ AZ_NODISCARD AZ_INLINE az_result az_iot_pnp_client_get_user_name(
  * @param[in] mqtt_client_id_size The size, in bytes of \p mqtt_client_id.
  * @param[out] out_mqtt_client_id_length __[nullable]__ Contains the string length, in bytes, of
  *                                                      of \p mqtt_client_id. Can be `NULL`.
- * @return #az_result
+ * @return An #az_result value indicating the result of the operation.
  */
 AZ_NODISCARD AZ_INLINE az_result az_iot_pnp_client_get_client_id(
     az_iot_pnp_client const* client,
@@ -163,7 +163,7 @@ AZ_NODISCARD AZ_INLINE az_result az_iot_pnp_client_get_client_id(
  * @param[in] token_expiration_epoch_time The time, in seconds, from 1/1/1970.
  * @param[in] signature An empty #az_span with sufficient capacity to hold the SAS signature.
  * @param[out] out_signature The output #az_span containing the SAS signature.
- * @return #az_result
+ * @return An #az_result value indicating the result of the operation.
  */
 AZ_NODISCARD AZ_INLINE az_result az_iot_pnp_client_get_sas_signature(
     az_iot_pnp_client const* client,
@@ -194,7 +194,7 @@ AZ_NODISCARD AZ_INLINE az_result az_iot_pnp_client_get_sas_signature(
  * @param[in] mqtt_password_size The size, in bytes of \p mqtt_password.
  * @param[out] out_mqtt_password_length __[nullable]__ Contains the string length, in bytes, of
  *                                                     \p mqtt_password. Can be `NULL`.
- * @return #az_result
+ * @return An #az_result value indicating the result of the operation.
  */
 AZ_NODISCARD AZ_INLINE az_result az_iot_pnp_client_get_sas_password(
     az_iot_pnp_client const* client,
@@ -239,7 +239,8 @@ AZ_NODISCARD AZ_INLINE az_result az_iot_pnp_client_get_sas_password(
  * @param[in] mqtt_topic_size The size, in bytes of \p mqtt_topic.
  * @param[out] out_mqtt_topic_length __[nullable]__ Contains the string length, in bytes, of
  *                                                  \p mqtt_topic. Can be `NULL`.
- * @return #az_result
+ * @return An #az_result value indicating the result of the operation.
+ * @retval #AZ_OK The topic was retrieved successfully.
  */
 AZ_NODISCARD az_result az_iot_pnp_client_telemetry_get_publish_topic(
     az_iot_pnp_client const* client,
@@ -282,8 +283,12 @@ typedef struct
  * @param[in] received_topic An #az_span containing the received topic.
  * @param[out] out_request If the message is a command request, this will contain the
  *                         #az_iot_pnp_client_command_request.
- * @return #az_result
- *         - `AZ_ERROR_IOT_TOPIC_NO_MATCH` if the topic is not matching the expected format.
+ * @return An #az_result value indicating the result of the operation.
+ * @retval #AZ_OK The topic is meant for this feature and the \p out_request was populated
+ * with relevant information.
+ * @retval #AZ_ERROR_IOT_TOPIC_NO_MATCH The topic does not match the expected format. This could
+ * be due to either a malformed topic OR the message which came in on this topic is not meant for
+ * this feature.
  */
 AZ_NODISCARD az_result az_iot_pnp_client_commands_parse_received_topic(
     az_iot_pnp_client const* client,
@@ -303,7 +308,8 @@ AZ_NODISCARD az_result az_iot_pnp_client_commands_parse_received_topic(
  * @param[in] mqtt_topic_size The size, in bytes of \p mqtt_topic.
  * @param[out] out_mqtt_topic_length __[nullable]__ Contains the string length, in bytes, of
  *                                                  \p mqtt_topic. Can be `NULL`.
- * @return #az_result
+ * @return An #az_result value indicating the result of the operation.
+ * @retval #AZ_OK The topic was retrieved successfully.
  */
 AZ_NODISCARD AZ_INLINE az_result az_iot_pnp_client_commands_response_get_publish_topic(
     az_iot_pnp_client const* client,
@@ -375,8 +381,12 @@ typedef struct
  * @param[in] received_topic An #az_span containing the received topic.
  * @param[out] out_twin_response If the message is twin-operation related, this will contain the
  *                         #az_iot_pnp_client_twin_response.
- * @return #az_result
- *         - `AZ_ERROR_IOT_TOPIC_NO_MATCH` if the topic is not matching the expected format.
+ * @return An #az_result value indicating the result of the operation.
+ * @retval #AZ_OK The topic is meant for this feature and the \p out_response was populated
+ * with relevant information.
+ * @retval #AZ_ERROR_IOT_TOPIC_NO_MATCH The topic does not match the expected format. This could
+ * be due to either a malformed topic OR the message which came in on this topic is not meant for
+ * this feature.
  */
 AZ_NODISCARD az_result az_iot_pnp_client_twin_parse_received_topic(
     az_iot_pnp_client const* client,
@@ -395,7 +405,8 @@ AZ_NODISCARD az_result az_iot_pnp_client_twin_parse_received_topic(
  * @param[in] mqtt_topic_size The size, in bytes of \p mqtt_topic.
  * @param[out] out_mqtt_topic_length __[nullable]__ Contains the string length, in bytes, of
  *                                                  \p mqtt_topic. Can be `NULL`.
- * @return #az_result
+ * @return An #az_result value indicating the result of the operation.
+ * @retval #AZ_OK The topic was retrieved successfully.
  */
 AZ_NODISCARD AZ_INLINE az_result az_iot_pnp_client_twin_document_get_publish_topic(
     az_iot_pnp_client const* client,
@@ -425,7 +436,8 @@ AZ_NODISCARD AZ_INLINE az_result az_iot_pnp_client_twin_document_get_publish_top
  * @param[in] mqtt_topic_size The size, in bytes of \p mqtt_topic.
  * @param[out] out_mqtt_topic_length __[nullable]__ Contains the string length, in bytes, of
  *                                                  \p mqtt_topic. Can be `NULL`.
- * @return #az_result
+ * @return An #az_result value indicating the result of the operation.
+ * @retval #AZ_OK The topic was retrieved successfully.
  */
 AZ_NODISCARD AZ_INLINE az_result az_iot_pnp_client_twin_patch_get_publish_topic(
     az_iot_pnp_client const* client,
@@ -450,7 +462,8 @@ AZ_NODISCARD AZ_INLINE az_result az_iot_pnp_client_twin_patch_get_publish_topic(
  * component.
  * @param [in] component_name The component name to begin.
  *
- * @return #az_result
+ * @return An #az_result value indicating the result of the operation.
+ * @retval #AZ_OK The json payload was prefixed successfully.
  */
 AZ_NODISCARD az_result az_iot_pnp_client_twin_property_begin_component(
     az_iot_pnp_client const* client,
@@ -464,7 +477,9 @@ AZ_NODISCARD az_result az_iot_pnp_client_twin_property_begin_component(
  * @param[in,out] The #az_json_writer to append the necessary characters for an IoT Plug and Play
  * component.
  *
- * @return #az_result
+ * @return An #az_result value indicating the result of the operation.
+ * @retval #AZ_OK The json payload was suffixed successfully.
+ * 
  */
 AZ_NODISCARD az_result az_iot_pnp_client_twin_property_end_component(
     az_iot_pnp_client const* client,
@@ -479,7 +494,8 @@ AZ_NODISCARD az_result az_iot_pnp_client_twin_property_end_component(
  * for a root or non-component, this can be #AZ_SPAN_EMPTY.
  * @param[in] property_name The name of the property to build a response payload for.
  * 
- * @return #az_result
+ * @return An #az_result value indicating the result of the operation.
+ * @retval #AZ_OK The json payload was prefixed successfully.
  */
 AZ_NODISCARD az_result az_iot_pnp_client_twin_begin_property_with_status(
     az_iot_pnp_client const* client,
@@ -500,7 +516,8 @@ AZ_NODISCARD az_result az_iot_pnp_client_twin_begin_property_with_status(
  * @param[in] ack_description The optional description detailing the context or any details about
  * the acknowledgement.
  *
- * @return #az_result
+ * @return An #az_result value indicating the result of the operation.
+ * @retval #AZ_OK The json payload was suffixed successfully.
  */
 AZ_NODISCARD az_result az_iot_pnp_client_twin_end_property_with_status(
     az_iot_pnp_client const* client,
@@ -587,7 +604,7 @@ AZ_NODISCARD az_result az_iot_pnp_client_twin_end_property_with_status(
  * once on the first invocation of the API and the same pointer shall be passed to subsequent calls
  * for the duration of the parsing.
  *
- * @return #az_result
+ * @return An #az_result value indicating the result of the operation.
  * @retval #AZ_OK If the function found a component name.
  * @retval #AZ_IOT_ITEM_NOT_COMPONENT If the next value is not a component name.
  * @retval #AZ_IOT_END_OF_COMPONENTS If there are no more components to iterate over.
@@ -610,7 +627,7 @@ AZ_NODISCARD az_result az_iot_pnp_client_twin_get_next_component(
  * @param[out] out_property_name The #az_json_token* representing the name of the property.
  * @param[out] out_property_value The #az_json_reader* representing the value of the property.
  *
- * @return #az_result
+ * @return An #az_result value indicating the result of the operation.
  * @retval #AZ_OK If the function returned a valid property name and value.
  * @retval #AZ_IOT_END_OF_PROPERTIES If there are no more properties left for the component.
  */
