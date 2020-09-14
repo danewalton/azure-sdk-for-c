@@ -140,8 +140,6 @@ typedef enum
   // === IoT error codes ===
   /// The IoT topic is not matching the expected format.
   AZ_ERROR_IOT_TOPIC_NO_MATCH = _az_RESULT_MAKE_ERROR(_az_FACILITY_IOT, 1),
-
-
 } az_result;
 
 /**
