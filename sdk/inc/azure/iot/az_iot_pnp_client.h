@@ -570,7 +570,6 @@ AZ_NODISCARD az_result az_iot_pnp_client_twin_end_property_with_status(
             // There was some error and it should be returned.
             return result;
           }
-          
         }
       }
       else if (result == AZ_IOT_ITEM_NOT_COMPONENT)
