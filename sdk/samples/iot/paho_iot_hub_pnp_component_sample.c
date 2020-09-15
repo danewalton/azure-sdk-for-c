@@ -344,7 +344,7 @@ static void create_and_configure_mqtt_client(void)
   // Initialize the hub client with the connection options.
   az_iot_pnp_client_options options = az_iot_pnp_client_options_default();
   options.component_names = pnp_components;
-  options.component_names_size = pnp_components_num;
+  options.component_names_length = pnp_components_num;
   rc = az_iot_pnp_client_init(
       &pnp_client, env_vars.hub_hostname, env_vars.hub_device_id, model_id, &options);
   if (az_result_failed(rc))

@@ -22,7 +22,7 @@ AZ_NODISCARD az_iot_pnp_client_options az_iot_pnp_client_options_default()
   return (az_iot_pnp_client_options){ .module_id = AZ_SPAN_EMPTY,
                                       .user_agent = client_sdk_version,
                                       .component_names = NULL,
-                                      .component_names_size = 0 };
+                                      .component_names_length = 0 };
 }
 
 AZ_NODISCARD az_result az_iot_pnp_client_init(
