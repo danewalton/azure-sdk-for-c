@@ -31,7 +31,7 @@ static az_span test_component_one = AZ_SPAN_LITERAL_FROM_STR("component_one");
 static az_span test_component_two = AZ_SPAN_LITERAL_FROM_STR("component_two");
 static az_span test_components[]
     = { AZ_SPAN_LITERAL_FROM_STR("component_one"), AZ_SPAN_LITERAL_FROM_STR("component_two") };
-static const int32_t test_components_size = sizeof(test_components) / sizeof(test_components[0]);
+static const int32_t test_components_length = sizeof(test_components) / sizeof(test_components[0]);
 static const az_span test_device_request_id = AZ_SPAN_LITERAL_FROM_STR("id_one");
 static const az_span test_twin_received_topic_desired_success
     = AZ_SPAN_LITERAL_FROM_STR("$iothub/twin/PATCH/properties/desired/?$version=id_one");
@@ -112,7 +112,7 @@ static az_span test_temp_component_one = AZ_SPAN_LITERAL_FROM_STR("thermostat1")
 static az_span test_temp_component_two = AZ_SPAN_LITERAL_FROM_STR("thermostat2");
 static az_span test_temperature_components[]
     = { AZ_SPAN_LITERAL_FROM_STR("thermostat1"), AZ_SPAN_LITERAL_FROM_STR("thermostat2") };
-static const int32_t test_temperature_components_size
+static const int32_t test_temperature_components_length
     = sizeof(test_temperature_components) / sizeof(test_temperature_components[0]);
 
 #ifndef AZ_NO_PRECONDITION_CHECKING
@@ -573,7 +573,7 @@ static void test_az_iot_pnp_client_twin_get_next_component_succeed()
   az_iot_pnp_client client;
   az_iot_pnp_client_options options = az_iot_pnp_client_options_default();
   options.component_names = test_components;
-  options.component_names_size = test_components_size;
+  options.component_names_length = test_components_length;
   assert_int_equal(
       az_iot_pnp_client_init(
           &client, test_device_hostname, test_device_id, test_model_id, &options),
@@ -664,7 +664,7 @@ static void test_az_iot_pnp_client_twin_get_next_component_long_succeed()
   az_iot_pnp_client client;
   az_iot_pnp_client_options options = az_iot_pnp_client_options_default();
   options.component_names = test_temperature_components;
-  options.component_names_size = test_temperature_components_size;
+  options.component_names_length = test_temperature_components_length;
   assert_int_equal(
       az_iot_pnp_client_init(
           &client, test_device_hostname, test_device_id, test_model_id, &options),

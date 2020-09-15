@@ -221,7 +221,7 @@ static az_result is_component_in_model(
 {
   int32_t index = 0;
 
-  while (index < client->_internal.options.component_names_size)
+  while (index < client->_internal.options.component_names_length)
   {
     if (az_json_token_is_text_equal(component_name, client->_internal.options.component_names[index]))
     {

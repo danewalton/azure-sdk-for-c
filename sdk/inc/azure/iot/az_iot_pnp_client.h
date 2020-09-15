@@ -32,7 +32,7 @@ typedef struct
                          usage statistics. */
   az_span* component_names; /**< The array of component names for this device. */
   int32_t
-      component_names_size; /**< The number of component names in the `component_names` array. */
+      component_names_length; /**< The number of component names in the `component_names` array. */
 } az_iot_pnp_client_options;
 
 /**
