@@ -460,7 +460,7 @@ AZ_NODISCARD AZ_INLINE az_result az_iot_pnp_client_twin_patch_get_publish_topic(
  * @param[in] client The #az_iot_pnp_client to use for this call.
  * @param[in,out] The #az_json_writer to append the necessary characters for an IoT Plug and Play
  * component.
- * @param [in] component_name The component name to begin.
+ * @param[in] component_name The component name to begin.
  *
  * @return An #az_result value indicating the result of the operation.
  * @retval #AZ_OK The json payload was prefixed successfully.
