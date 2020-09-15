@@ -29,7 +29,8 @@ static const az_span test_model_id
     = AZ_SPAN_LITERAL_FROM_STR("dtmi:YOUR_COMPANY_NAME_HERE:sample_device;1");
 static az_span test_component_one = AZ_SPAN_LITERAL_FROM_STR("component_one");
 static az_span test_component_two = AZ_SPAN_LITERAL_FROM_STR("component_two");
-static az_span* test_components[] = { &test_component_one, &test_component_two };
+static az_span test_components[]
+    = { AZ_SPAN_LITERAL_FROM_STR("component_one"), AZ_SPAN_LITERAL_FROM_STR("component_two") };
 static const int32_t test_components_size = sizeof(test_components) / sizeof(test_components[0]);
 static const az_span test_device_request_id = AZ_SPAN_LITERAL_FROM_STR("id_one");
 static const az_span test_twin_received_topic_desired_success
@@ -109,8 +110,8 @@ static const az_span test_twin_payload_long = AZ_SPAN_LITERAL_FROM_STR(
     "Manufacturer(TM)\",\"totalStorage\":1024,\"totalMemory\":128}}");
 static az_span test_temp_component_one = AZ_SPAN_LITERAL_FROM_STR("thermostat1");
 static az_span test_temp_component_two = AZ_SPAN_LITERAL_FROM_STR("thermostat2");
-static az_span* test_temperature_components[]
-    = { &test_temp_component_one, &test_temp_component_two };
+static az_span test_temperature_components[]
+    = { AZ_SPAN_LITERAL_FROM_STR("thermostat1"), AZ_SPAN_LITERAL_FROM_STR("thermostat2") };
 static const int32_t test_temperature_components_size
     = sizeof(test_temperature_components) / sizeof(test_temperature_components[0]);
 
@@ -574,7 +575,8 @@ static void test_az_iot_pnp_client_twin_get_next_component_succeed()
   options.component_names = test_components;
   options.component_names_size = test_components_size;
   assert_int_equal(
-      az_iot_pnp_client_init(&client, test_device_hostname, test_device_id, test_model_id, &options),
+      az_iot_pnp_client_init(
+          &client, test_device_hostname, test_device_id, test_model_id, &options),
       AZ_OK);
 
   az_json_reader jr;
@@ -664,7 +666,8 @@ static void test_az_iot_pnp_client_twin_get_next_component_long_succeed()
   options.component_names = test_temperature_components;
   options.component_names_size = test_temperature_components_size;
   assert_int_equal(
-      az_iot_pnp_client_init(&client, test_device_hostname, test_device_id, test_model_id, &options),
+      az_iot_pnp_client_init(
+          &client, test_device_hostname, test_device_id, test_model_id, &options),
       AZ_OK);
 
   az_json_reader jr;
