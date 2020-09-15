@@ -52,8 +52,9 @@ static pnp_thermostat_component thermostat_2;
 static az_span thermostat_1_name = AZ_SPAN_LITERAL_FROM_STR("thermostat1");
 static az_span thermostat_2_name = AZ_SPAN_LITERAL_FROM_STR("thermostat2");
 static az_span device_information_name = AZ_SPAN_LITERAL_FROM_STR("deviceInformation");
-static az_span* pnp_components[]
-    = { &thermostat_1_name, &thermostat_2_name, &device_information_name };
+static az_span pnp_components[] = { AZ_SPAN_LITERAL_FROM_STR("thermostat1"),
+                                    AZ_SPAN_LITERAL_FROM_STR("thermostat2"),
+                                    AZ_SPAN_LITERAL_FROM_STR("deviceInformation") };
 static int32_t const pnp_components_num = sizeof(pnp_components) / sizeof(pnp_components[0]);
 
 // IoT Hub Device Twin Values

@@ -30,7 +30,7 @@ typedef struct
   az_span module_id; /**< The module name (if a module identity is used). */
   az_span user_agent; /**< The user-agent is a formatted string that will be used for Azure IoT
                          usage statistics. */
-  az_span** component_names; /**< The array of component names for this device. */
+  az_span* component_names; /**< The array of component names for this device. */
   int32_t
       component_names_size; /**< The number of component names in the `component_names` array. */
 } az_iot_pnp_client_options;
