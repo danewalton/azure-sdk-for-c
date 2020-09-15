@@ -308,17 +308,6 @@ static void test_az_iot_pnp_client_twin_property_end_component_NULL_jw_fails()
   ASSERT_PRECONDITION_CHECKED(az_iot_pnp_client_twin_property_end_component(&client, NULL));
 }
 
-static void test_az_iot_pnp_client_twin_property_end_component_NULL_component_name_fails()
-{
-  az_iot_pnp_client client;
-  assert_int_equal(
-      az_iot_pnp_client_init(&client, test_device_hostname, test_device_id, test_model_id, NULL),
-      AZ_OK);
-
-  az_json_writer jw;
-  ASSERT_PRECONDITION_CHECKED(az_iot_pnp_client_twin_property_end_component(&client, &jw));
-}
-
 #endif // AZ_NO_PRECONDITION_CHECKING
 
 static void test_az_iot_pnp_client_twin_document_get_publish_topic_succeed()
@@ -521,6 +510,65 @@ static void test_az_iot_pnp_client_twin_property_end_component_with_user_data_su
   assert_int_equal(az_json_writer_append_int32(&jw, 100), AZ_OK);
   assert_int_equal(az_iot_pnp_client_twin_property_end_component(&client, &jw), AZ_OK);
   assert_string_equal(json_buffer, "{\"component_one\":{\"__t\":\"c\",\"prop\":100}");
+}
+
+static void test_az_iot_pnp_client_twin_begin_property_with_status_succeed()
+{
+  az_iot_pnp_client client;
+  assert_int_equal(
+      az_iot_pnp_client_init(&client, test_device_hostname, test_device_id, test_model_id, NULL),
+      AZ_OK);
+  az_json_writer jw;
+  char json_buffer[128] = { 0 };
+  assert_int_equal(az_json_writer_init(&jw, AZ_SPAN_FROM_BUFFER(json_buffer), NULL), AZ_OK);
+  assert_int_equal(az_json_writer_append_begin_object(&jw), AZ_OK);
+
+  assert_int_equal(
+      az_iot_pnp_client_twin_begin_property_with_status(
+          &client,
+          &jw,
+          AZ_SPAN_EMPTY,
+          AZ_SPAN_FROM_STR("targetTemperature"),
+          200,
+          29,
+          AZ_SPAN_FROM_STR("success")),
+      AZ_OK);
+
+  assert_string_equal(
+      json_buffer,
+      "{\"targetTemperature\":{\"ac\":200,\"av\":29,\"ad\":\"success\",\"value\":");
+}
+
+static void test_az_iot_pnp_client_twin_end_property_with_status_succeed()
+{
+  az_iot_pnp_client client;
+  assert_int_equal(
+      az_iot_pnp_client_init(&client, test_device_hostname, test_device_id, test_model_id, NULL),
+      AZ_OK);
+  az_json_writer jw;
+  char json_buffer[128] = { 0 };
+  assert_int_equal(az_json_writer_init(&jw, AZ_SPAN_FROM_BUFFER(json_buffer), NULL), AZ_OK);
+  assert_int_equal(az_json_writer_append_begin_object(&jw), AZ_OK);
+
+  assert_int_equal(
+      az_iot_pnp_client_twin_begin_property_with_status(
+          &client,
+          &jw,
+          AZ_SPAN_EMPTY,
+          AZ_SPAN_FROM_STR("targetTemperature"),
+          200,
+          29,
+          AZ_SPAN_FROM_STR("success")),
+      AZ_OK);
+  assert_int_equal(az_json_writer_append_int32(&jw, 50), AZ_OK);
+  assert_int_equal(
+      az_iot_pnp_client_twin_end_property_with_status(&client, &jw, AZ_SPAN_EMPTY), AZ_OK);
+
+  assert_int_equal(az_json_writer_append_end_object(&jw), AZ_OK);
+
+  assert_string_equal(
+      json_buffer,
+      "{\"targetTemperature\":{\"ac\":200,\"av\":29,\"ad\":\"success\",\"value\":50}}");
 }
 
 static int _log_invoked_topic = 0;
@@ -768,7 +816,6 @@ int test_az_iot_pnp_client_twin()
         test_az_iot_pnp_client_twin_property_begin_component_NULL_component_name_fails),
     cmocka_unit_test(test_az_iot_pnp_client_twin_property_end_component_NULL_client_fails),
     cmocka_unit_test(test_az_iot_pnp_client_twin_property_end_component_NULL_jw_fails),
-    cmocka_unit_test(test_az_iot_pnp_client_twin_property_end_component_NULL_component_name_fails),
   // cmocka_unit_test(test_az_iot_pnp_client_twin_get_next_component_NULL_client_fail),
 #endif // AZ_NO_PRECONDITION_CHECKING
     cmocka_unit_test(test_az_iot_pnp_client_twin_document_get_publish_topic_succeed),
@@ -786,6 +833,8 @@ int test_az_iot_pnp_client_twin()
     cmocka_unit_test(test_az_iot_pnp_client_twin_property_end_component_with_user_data_succeed),
     cmocka_unit_test(test_az_iot_pnp_client_twin_get_next_component_succeed),
     cmocka_unit_test(test_az_iot_pnp_client_twin_get_next_component_long_succeed),
+    cmocka_unit_test(test_az_iot_pnp_client_twin_begin_property_with_status_succeed),
+    cmocka_unit_test(test_az_iot_pnp_client_twin_end_property_with_status_succeed),
   };
 
   return cmocka_run_group_tests_name("az_iot_pnp_client_twin", tests, NULL, NULL);
