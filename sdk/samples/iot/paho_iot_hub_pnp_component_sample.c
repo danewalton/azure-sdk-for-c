@@ -927,16 +927,17 @@ static void process_twin_message(az_span twin_message_span, bool is_partial)
 
       if (az_result_failed(
               result = az_iot_pnp_client_twin_begin_property_with_status(
-                  &pnp_client, &jw, component_name.slice, property_name.slice))
-          || az_result_failed(append_json_token(&jw, &property_value.token))
-          || az_result_failed(
-              result = az_iot_pnp_client_twin_end_property_with_status(
                   &pnp_client,
                   &jw,
                   component_name.slice,
+                  property_name.slice,
                   AZ_IOT_STATUS_NOT_FOUND,
                   version,
-                  twin_response_failed)))
+                  twin_response_failed))
+          || az_result_failed(append_json_token(&jw, &property_value.token))
+          || az_result_failed(
+              result = az_iot_pnp_client_twin_end_property_with_status(
+                  &pnp_client, &jw, component_name.slice)))
 
         // Send error response to the updated property.
         publish_mqtt_message(
@@ -971,20 +972,20 @@ static void handle_device_twin_message(
   switch (twin_response->response_type)
   {
     // A response from a twin GET publish message with the twin document as a payload.
-    case AZ_IOT_HUB_CLIENT_TWIN_RESPONSE_TYPE_GET:
+    case AZ_IOT_PNP_CLIENT_TWIN_RESPONSE_TYPE_GET:
       IOT_SAMPLE_LOG("Message Type: GET");
       (void)process_twin_message(message_span, false);
       break;
 
     // An update to the desired properties with the properties as a payload.
-    case AZ_IOT_HUB_CLIENT_TWIN_RESPONSE_TYPE_DESIRED_PROPERTIES:
+    case AZ_IOT_PNP_CLIENT_TWIN_RESPONSE_TYPE_DESIRED_PROPERTIES:
       IOT_SAMPLE_LOG("Message Type: Desired Properties");
       (void)process_twin_message(message_span, true);
 
       break;
 
     // A response from a twin reported properties publish message.
-    case AZ_IOT_HUB_CLIENT_TWIN_RESPONSE_TYPE_REPORTED_PROPERTIES:
+    case AZ_IOT_PNP_CLIENT_TWIN_RESPONSE_TYPE_REPORTED_PROPERTIES:
       IOT_SAMPLE_LOG("Message Type: Reported Properties");
       break;
   }

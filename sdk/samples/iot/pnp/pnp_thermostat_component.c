@@ -259,15 +259,16 @@ az_result pnp_thermostat_process_property_update(
     az_result rc = az_json_writer_init(&jw, payload, NULL);
 
     rc = az_iot_pnp_client_twin_begin_property_with_status(
-        pnp_client, &jw, ref_thermostat_component->component_name, property_name->slice);
-    rc = az_json_writer_append_double(&jw, parsed_property_value, DOUBLE_DECIMAL_PLACE_DIGITS);
-    rc = az_iot_pnp_client_twin_end_property_with_status(
         pnp_client,
         &jw,
         ref_thermostat_component->component_name,
+        property_name->slice,
         (int32_t)AZ_IOT_STATUS_OK,
         version,
         twin_response_success);
+    rc = az_json_writer_append_double(&jw, parsed_property_value, DOUBLE_DECIMAL_PLACE_DIGITS);
+    rc = az_iot_pnp_client_twin_end_property_with_status(
+        pnp_client, &jw, ref_thermostat_component->component_name);
 
     if (az_result_failed(rc))
     {

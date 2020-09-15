@@ -479,7 +479,6 @@ AZ_NODISCARD az_result az_iot_pnp_client_twin_property_begin_component(
  *
  * @return An #az_result value indicating the result of the operation.
  * @retval #AZ_OK The json payload was suffixed successfully.
- * 
  */
 AZ_NODISCARD az_result az_iot_pnp_client_twin_property_end_component(
     az_iot_pnp_client const* client,
@@ -493,7 +492,12 @@ AZ_NODISCARD az_result az_iot_pnp_client_twin_property_end_component(
  * @param[in] component_name The name of the component to use with this property payload. If this is
  * for a root or non-component, this can be #AZ_SPAN_EMPTY.
  * @param[in] property_name The name of the property to build a response payload for.
- * 
+ * @param[in] ack_code The HTTP-like status code to respond with. Please see #az_iot_status for
+ * possible supported values.
+ * @param[in] ack_version The version of the property the application is acknowledging.
+ * @param[in] ack_description The optional description detailing the context or any details about
+ * the acknowledgement.
+ *
  * @return An #az_result value indicating the result of the operation.
  * @retval #AZ_OK The json payload was prefixed successfully.
  */
@@ -501,7 +505,10 @@ AZ_NODISCARD az_result az_iot_pnp_client_twin_begin_property_with_status(
     az_iot_pnp_client const* client,
     az_json_writer* json_writer,
     az_span component_name,
-    az_span property_name);
+    az_span property_name,
+    int32_t ack_code,
+    int32_t ack_version,
+    az_span ack_description);
 
 /**
  * @brief End a property response payload with status
@@ -510,22 +517,13 @@ AZ_NODISCARD az_result az_iot_pnp_client_twin_begin_property_with_status(
  * @param[in] json_writer The initialized #az_json_writer to append data to.
  * @param[in] component_name The name of the component to use with this property payload. If this is
  * for a root or non-component, this can be #AZ_SPAN_EMPTY.
- * @param[in] ack_code The HTTP-like status code to respond with. Please see #az_iot_status for
- * possible supported values.
- * @param[in] ack_version The version of the property the application is acknowledging.
- * @param[in] ack_description The optional description detailing the context or any details about
- * the acknowledgement.
- *
  * @return An #az_result value indicating the result of the operation.
  * @retval #AZ_OK The json payload was suffixed successfully.
  */
 AZ_NODISCARD az_result az_iot_pnp_client_twin_end_property_with_status(
     az_iot_pnp_client const* client,
     az_json_writer* json_writer,
-    az_span component_name,
-    int32_t ack_code,
-    int32_t ack_version,
-    az_span ack_description);
+    az_span component_name);
 
 /**
  * @brief Read and return the next IoT Plug and Play twin properties component
@@ -591,8 +589,8 @@ AZ_NODISCARD az_result az_iot_pnp_client_twin_end_property_with_status(
       }
     }
  * @endcode
- * 
- * 
+ *
+ *
  *
  * @param[in] client The #az_iot_pnp_client to use for this call.
  * @param[in] json_reader The #az_json_reader to parse through.
@@ -602,6 +600,10 @@ AZ_NODISCARD az_result az_iot_pnp_client_twin_end_property_with_status(
  * @param[out] out_version The `int32_t` representing the version of the properties. This is set
  * once on the first invocation of the API and the same pointer shall be passed to subsequent calls
  * for the duration of the parsing.
+ *
+ * @pre \p client must not be NULL.
+ * @pre \p json_reader must not be NULL.
+ * @pre \p out_component_name must not be NULL.
  *
  * @return An #az_result value indicating the result of the operation.
  * @retval #AZ_OK If the function found a component name.
@@ -635,7 +637,6 @@ AZ_NODISCARD az_result az_iot_pnp_client_twin_get_next_component_property(
     az_json_reader* json_reader,
     az_json_token* out_property_name,
     az_json_reader* out_property_value);
-
 
 #include <azure/core/_az_cfg_suffix.h>
 
