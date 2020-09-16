@@ -525,6 +525,12 @@ AZ_NODISCARD az_result az_iot_pnp_client_twin_end_property_with_status(
     az_json_writer* json_writer,
     az_span component_name);
 
+
+AZ_NODISCARD az_result az_iot_pnp_client_twin_get_property_version(
+    az_iot_pnp_client const* client,
+    az_json_reader* json_reader,
+    int32_t* out_version);
+
 /**
  * @brief Read the IoT Plug and Play twin properties for a given component
  *
@@ -534,7 +540,8 @@ AZ_NODISCARD az_result az_iot_pnp_client_twin_end_property_with_status(
  * @param[in] client The #az_iot_pnp_client to use for this call.
  * @param[in] json_reader The #az_json_reader to parse through.
  * @param[in] is_partial The boolean representing whether the twin document is from a partial update
- * (PATCH) or a full twin document (GET).
+ * (#AZ_IOT_PNP_CLIENT_TWIN_RESPONSE_TYPE_DESIRED_PROPERTIES) or a full twin document
+ * (#AZ_IOT_PNP_CLIENT_TWIN_RESPONSE_TYPE_GET).
  * @param[out] out_component_name The #az_span* representing the value of the component.
  * @param[out] out_property_name The #az_json_token* representing the name of the property.
  * @param[out] out_property_value The #az_json_reader* representing the value of the property.
@@ -543,7 +550,7 @@ AZ_NODISCARD az_result az_iot_pnp_client_twin_end_property_with_status(
  * @retval #AZ_OK If the function returned a valid property name and value.
  * @retval #AZ_IOT_END_OF_PROPERTIES If there are no more properties left for the component.
  */
-AZ_NODISCARD az_result az_iot_pnp_client_twin_get_next_component_property_combo(
+AZ_NODISCARD az_result az_iot_pnp_client_twin_get_next_component_property(
     az_iot_pnp_client const* client,
     az_json_reader* json_reader,
     bool is_partial,

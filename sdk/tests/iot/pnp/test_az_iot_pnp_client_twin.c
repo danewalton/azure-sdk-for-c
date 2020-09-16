@@ -638,7 +638,7 @@ static void test_az_iot_pnp_client_twin_get_next_component_combo_succeed()
 
   // First component
   assert_int_equal(
-      az_iot_pnp_client_twin_get_next_component_property_combo(
+      az_iot_pnp_client_twin_get_next_component_property(
           &client, &jr, is_partial, &component_name, &property_name, &property_value),
       AZ_OK);
   assert_true(az_span_is_content_equal(component_name, test_component_one));
@@ -647,7 +647,7 @@ static void test_az_iot_pnp_client_twin_get_next_component_combo_succeed()
   assert_int_equal(value, 1);
 
   assert_int_equal(
-      az_iot_pnp_client_twin_get_next_component_property_combo(
+      az_iot_pnp_client_twin_get_next_component_property(
           &client, &jr, is_partial, &component_name, &property_name, &property_value),
       AZ_OK);
   assert_true(az_span_is_content_equal(component_name, test_component_one));
@@ -656,7 +656,7 @@ static void test_az_iot_pnp_client_twin_get_next_component_combo_succeed()
 
   // Second component
   assert_int_equal(
-      az_iot_pnp_client_twin_get_next_component_property_combo(
+      az_iot_pnp_client_twin_get_next_component_property(
           &client, &jr, is_partial, &component_name, &property_name, &property_value),
       AZ_OK);
   assert_true(az_span_is_content_equal(component_name, test_component_two));
@@ -666,7 +666,7 @@ static void test_az_iot_pnp_client_twin_get_next_component_combo_succeed()
   // assert_int_equal(version, 5);
 
   assert_int_equal(
-      az_iot_pnp_client_twin_get_next_component_property_combo(
+      az_iot_pnp_client_twin_get_next_component_property(
           &client, &jr, is_partial, &component_name, &property_name, &property_value),
       AZ_OK);
   assert_true(az_json_token_is_text_equal(&property_name, AZ_SPAN_FROM_STR("prop_four")));
@@ -674,7 +674,7 @@ static void test_az_iot_pnp_client_twin_get_next_component_combo_succeed()
 
   // Not a component
   assert_int_equal(
-      az_iot_pnp_client_twin_get_next_component_property_combo(
+      az_iot_pnp_client_twin_get_next_component_property(
           &client, &jr, is_partial, &component_name, &property_name, &property_value),
       AZ_OK);
   assert_true(az_span_is_content_equal(component_name, AZ_SPAN_EMPTY));
@@ -684,7 +684,7 @@ static void test_az_iot_pnp_client_twin_get_next_component_combo_succeed()
 
   // End of components (skipping version)
   assert_int_equal(
-      az_iot_pnp_client_twin_get_next_component_property_combo(
+      az_iot_pnp_client_twin_get_next_component_property(
           &client, &jr, is_partial, &component_name, &property_name, &property_value),
       AZ_IOT_END_OF_PROPERTIES);
 }
@@ -711,7 +711,7 @@ static void test_az_iot_pnp_client_twin_get_next_component_combo_long_succeed()
   int32_t value;
   // First component
   assert_int_equal(
-      az_iot_pnp_client_twin_get_next_component_property_combo(
+      az_iot_pnp_client_twin_get_next_component_property(
           &client, &jr, is_partial, &component_name, &property_name, &property_value),
       AZ_OK);
   assert_true(az_span_is_content_equal(component_name, test_temp_component_two));
@@ -721,7 +721,7 @@ static void test_az_iot_pnp_client_twin_get_next_component_combo_long_succeed()
 
   // Second component
   assert_int_equal(
-      az_iot_pnp_client_twin_get_next_component_property_combo(
+      az_iot_pnp_client_twin_get_next_component_property(
           &client, &jr, is_partial, &component_name, &property_name, &property_value),
       AZ_OK);
   assert_true(az_span_is_content_equal(component_name, test_temp_component_one));
@@ -731,7 +731,7 @@ static void test_az_iot_pnp_client_twin_get_next_component_combo_long_succeed()
 
   // Not a component
   assert_int_equal(
-      az_iot_pnp_client_twin_get_next_component_property_combo(
+      az_iot_pnp_client_twin_get_next_component_property(
           &client, &jr, is_partial, &component_name, &property_name, &property_value),
       AZ_OK);
   assert_true(az_span_is_content_equal(component_name, AZ_SPAN_EMPTY));
@@ -741,7 +741,7 @@ static void test_az_iot_pnp_client_twin_get_next_component_combo_long_succeed()
 
   // End of components (skipping version and reported properties section)
   assert_int_equal(
-      az_iot_pnp_client_twin_get_next_component_property_combo(
+      az_iot_pnp_client_twin_get_next_component_property(
           &client, &jr, is_partial, &component_name, &property_name, &property_value),
       AZ_IOT_END_OF_PROPERTIES);
 }
