@@ -190,6 +190,7 @@ void pnp_thermostat_build_maximum_temperature_reported_property(
   az_json_writer jw;
 
   if (az_result_failed(rc = az_json_writer_init(&jw, payload, NULL))
+      || (az_result_failed(az_json_writer_append_begin_object(&jw)))
       || az_result_failed(
           rc = az_iot_pnp_client_twin_property_begin_component(
               pnp_client, &jw, thermostat_component->component_name))
@@ -258,6 +259,7 @@ az_result pnp_thermostat_process_property_update(
     az_json_writer jw;
     az_result rc = az_json_writer_init(&jw, payload, NULL);
 
+    rc = az_json_writer_append_begin_object(&jw);
     rc = az_iot_pnp_client_twin_begin_property_with_status(
         pnp_client,
         &jw,
@@ -269,6 +271,7 @@ az_result pnp_thermostat_process_property_update(
     rc = az_json_writer_append_double(&jw, parsed_property_value, DOUBLE_DECIMAL_PLACE_DIGITS);
     rc = az_iot_pnp_client_twin_end_property_with_status(
         pnp_client, &jw, ref_thermostat_component->component_name);
+    rc = az_json_writer_append_end_object(&jw);
 
     if (az_result_failed(rc))
     {

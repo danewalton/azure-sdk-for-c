@@ -910,7 +910,8 @@ static void process_twin_message(az_span twin_message_span, bool is_partial)
         az_json_writer jw;
         result = az_json_writer_init(&jw, publish_message.payload, NULL);
 
-        if (az_result_failed(
+        if (az_result_failed(az_json_writer_append_begin_object(&jw))
+            || az_result_failed(
                 result = az_iot_pnp_client_twin_begin_property_with_status(
                     &pnp_client,
                     &jw,
@@ -921,8 +922,9 @@ static void process_twin_message(az_span twin_message_span, bool is_partial)
                     twin_response_failed))
             || az_result_failed(append_json_token(&jw, &property_value.token))
             || az_result_failed(
-                result = az_iot_pnp_client_twin_end_property_with_status(
-                    &pnp_client, &jw, component_name)))
+                result
+                = az_iot_pnp_client_twin_end_property_with_status(&pnp_client, &jw, component_name))
+            || az_result_failed(az_json_writer_append_end_object(&jw)))
 
           // Send error response to the updated property.
           publish_mqtt_message(

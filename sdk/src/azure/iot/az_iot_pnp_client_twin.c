@@ -282,6 +282,28 @@ AZ_NODISCARD az_result az_iot_pnp_client_twin_get_next_component_property(
     }
 
     // We are at root component level
+    if ((az_json_token_is_text_equal(&json_reader->token, iot_hub_twin_desired_version)))
+    {
+      if ((az_result_failed(az_json_reader_next_token(json_reader)))
+          || (az_result_failed(az_json_reader_next_token(json_reader))))
+      {
+        return AZ_ERROR_UNEXPECTED_CHAR;
+      }
+    }
+
+    if ((json_reader->token.kind == AZ_JSON_TOKEN_END_OBJECT))
+    {
+      if ((is_partial && json_reader->_internal.bit_stack._internal.current_depth == 0)
+          || (!is_partial && json_reader->_internal.bit_stack._internal.current_depth == 1))
+      {
+        return AZ_IOT_END_OF_PROPERTIES;
+      }
+      else if (az_result_failed(az_json_reader_next_token(json_reader)))
+      {
+        return AZ_ERROR_UNEXPECTED_CHAR;
+      }
+    }
+
     if (az_result_succeeded(is_component_in_model(client, &json_reader->token, out_component_name)))
     {
       if (az_result_failed(az_json_reader_next_token(json_reader))

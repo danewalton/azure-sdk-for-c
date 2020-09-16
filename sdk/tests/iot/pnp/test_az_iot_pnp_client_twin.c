@@ -115,6 +115,30 @@ static az_span test_temperature_components[]
 static const int32_t test_temperature_components_length
     = sizeof(test_temperature_components) / sizeof(test_temperature_components[0]);
 
+/*
+
+{
+    "desired": {
+        "thermostat1": {
+            "__t": "c",
+            "targetTemperature": 47
+        },
+        "$version": 4
+    },
+    "reported": {
+        "manufacturer": "Sample-Manufacturer",
+        "model": "pnp-sample-Model-123",
+        "swVersion": "1.0.0.0",
+        "osName": "Contoso"
+    }
+}
+
+*/
+static const az_span test_twin_payload_long_two = AZ_SPAN_LITERAL_FROM_STR(
+    "{\"desired\":{\"thermostat1\":{\"__t\":\"c\",\"targetTemperature\":47},\"$version\":4},"
+    "\"reported\":{\"manufacturer\":\"Sample-Manufacturer\",\"model\":\"pnp-sample-Model-123\","
+    "\"swVersion\":\"1.0.0.0\",\"osName\":\"Contoso\"}}");
+
 #ifndef AZ_NO_PRECONDITION_CHECKING
 ENABLE_PRECONDITION_CHECK_TESTS()
 
@@ -655,7 +679,7 @@ static void test_az_iot_pnp_client_twin_get_property_version_long_succeed()
   assert_int_equal(version, 30);
 }
 
-static void test_az_iot_pnp_client_twin_get_next_component_combo_succeed()
+static void test_az_iot_pnp_client_twin_get_next_component_property_succeed()
 {
   az_iot_pnp_client client;
   az_iot_pnp_client_options options = az_iot_pnp_client_options_default();
@@ -728,7 +752,7 @@ static void test_az_iot_pnp_client_twin_get_next_component_combo_succeed()
       AZ_IOT_END_OF_PROPERTIES);
 }
 
-static void test_az_iot_pnp_client_twin_get_next_component_combo_long_succeed()
+static void test_az_iot_pnp_client_twin_get_next_component_property_long_succeed()
 {
   az_iot_pnp_client client;
   az_iot_pnp_client_options options = az_iot_pnp_client_options_default();
@@ -785,6 +809,43 @@ static void test_az_iot_pnp_client_twin_get_next_component_combo_long_succeed()
       AZ_IOT_END_OF_PROPERTIES);
 }
 
+static void test_az_iot_pnp_client_twin_get_next_component_property_long_two_succeed()
+{
+  az_iot_pnp_client client;
+  az_iot_pnp_client_options options = az_iot_pnp_client_options_default();
+  options.component_names = test_temperature_components;
+  options.component_names_length = test_temperature_components_length;
+  assert_int_equal(
+      az_iot_pnp_client_init(
+          &client, test_device_hostname, test_device_id, test_model_id, &options),
+      AZ_OK);
+
+  az_json_reader jr;
+  assert_int_equal(az_json_reader_init(&jr, test_twin_payload_long_two, NULL), AZ_OK);
+
+  bool is_partial = false;
+  az_span component_name;
+  az_json_token property_name;
+  az_json_reader property_value;
+  // int32_t version;
+  int32_t value;
+  // First component
+  assert_int_equal(
+      az_iot_pnp_client_twin_get_next_component_property(
+          &client, &jr, is_partial, &component_name, &property_name, &property_value),
+      AZ_OK);
+  assert_true(az_span_is_content_equal(component_name, test_temp_component_one));
+  assert_true(az_json_token_is_text_equal(&property_name, AZ_SPAN_FROM_STR("targetTemperature")));
+  assert_int_equal(az_json_token_get_int32(&property_value.token, &value), AZ_OK);
+  assert_int_equal(value, 47);
+
+  // End of components (skipping version and reported properties section)
+  assert_int_equal(
+      az_iot_pnp_client_twin_get_next_component_property(
+          &client, &jr, is_partial, &component_name, &property_name, &property_value),
+      AZ_IOT_END_OF_PROPERTIES);
+}
+
 #ifdef _MSC_VER
 // warning C4113: 'void (__cdecl *)()' differs in parameter lists from 'CMUnitTestFunction'
 #pragma warning(disable : 4113)
@@ -831,8 +892,9 @@ int test_az_iot_pnp_client_twin()
     cmocka_unit_test(test_az_iot_pnp_client_twin_property_end_component_with_user_data_succeed),
     cmocka_unit_test(test_az_iot_pnp_client_twin_get_property_version_succeed),
     cmocka_unit_test(test_az_iot_pnp_client_twin_get_property_version_long_succeed),
-    cmocka_unit_test(test_az_iot_pnp_client_twin_get_next_component_combo_succeed),
-    cmocka_unit_test(test_az_iot_pnp_client_twin_get_next_component_combo_long_succeed),
+    cmocka_unit_test(test_az_iot_pnp_client_twin_get_next_component_property_succeed),
+    cmocka_unit_test(test_az_iot_pnp_client_twin_get_next_component_property_long_succeed),
+    cmocka_unit_test(test_az_iot_pnp_client_twin_get_next_component_property_long_two_succeed),
     cmocka_unit_test(test_az_iot_pnp_client_twin_begin_property_with_status_succeed),
     cmocka_unit_test(test_az_iot_pnp_client_twin_end_property_with_status_succeed),
   };
