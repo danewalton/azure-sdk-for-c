@@ -797,6 +797,19 @@ static void process_twin_message(az_span twin_message_span, bool is_partial)
 {
   az_result result;
 
+    result = az_iot_pnp_client_twin_patch_get_publish_topic(
+      &pnp_client,
+      pnp_mqtt_get_request_id(),
+      publish_message.topic,
+      publish_message.topic_length,
+      NULL);
+  if (az_result_failed(result))
+  {
+    IOT_SAMPLE_LOG_ERROR(
+        "Failed to get the Twin Patch topic: az_result return code 0x%08x.", result);
+    exit(result);
+  }
+
   az_json_reader jr;
   az_span component_name;
   az_json_token property_name;
@@ -809,16 +822,18 @@ static void process_twin_message(az_span twin_message_span, bool is_partial)
     exit(result);
   }
 
-  result = az_iot_pnp_client_twin_patch_get_publish_topic(
-      &pnp_client,
-      pnp_mqtt_get_request_id(),
-      publish_message.topic,
-      publish_message.topic_length,
-      NULL);
+  result = az_iot_pnp_client_twin_get_property_version(&pnp_client, &jr, is_partial, &version);
   if (az_result_failed(result))
   {
     IOT_SAMPLE_LOG_ERROR(
         "Failed to get the Twin Patch topic: az_result return code 0x%08x.", result);
+    exit(result);
+  }
+
+  if (az_result_failed(result = az_json_reader_init(&jr, twin_message_span, NULL)))
+  {
+    IOT_SAMPLE_LOG_ERROR(
+        "Could not initialize the json reader: az_result return code 0x%08x.", result);
     exit(result);
   }
 
