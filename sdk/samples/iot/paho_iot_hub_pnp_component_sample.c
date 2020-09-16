@@ -830,13 +830,6 @@ static void process_twin_message(az_span twin_message_span, bool is_partial)
     exit(result);
   }
 
-  if (az_result_failed(result = az_json_reader_init(&jr, twin_message_span, NULL)))
-  {
-    IOT_SAMPLE_LOG_ERROR(
-        "Could not initialize the json reader: az_result return code 0x%08x.", result);
-    exit(result);
-  }
-
   while (az_result_succeeded(
       result = az_iot_pnp_client_twin_get_next_component_property(
           &pnp_client, &jr, is_partial, &component_name, &property_name, &property_value)))

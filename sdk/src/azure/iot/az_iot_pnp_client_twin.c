@@ -198,22 +198,24 @@ AZ_NODISCARD az_result az_iot_pnp_client_twin_get_property_version(
 
   (void)client;
 
-  if ((az_result_failed(az_json_reader_next_token(json_reader)))
-      || (json_reader->token.kind != AZ_JSON_TOKEN_BEGIN_OBJECT)
-      || (az_result_failed(az_json_reader_next_token(json_reader))))
+  az_json_reader copy_json_reader = *json_reader;
+
+  if ((az_result_failed(az_json_reader_next_token(&copy_json_reader)))
+      || (copy_json_reader.token.kind != AZ_JSON_TOKEN_BEGIN_OBJECT)
+      || (az_result_failed(az_json_reader_next_token(&copy_json_reader))))
   {
     return AZ_ERROR_UNEXPECTED_CHAR;
   }
 
   if (!is_partial
-      && (az_result_failed(json_child_token_move(json_reader, iot_hub_twin_desired))
-          || (az_result_failed(az_json_reader_next_token(json_reader)))))
+      && (az_result_failed(json_child_token_move(&copy_json_reader, iot_hub_twin_desired))
+          || (az_result_failed(az_json_reader_next_token(&copy_json_reader)))))
   {
     return AZ_ERROR_UNEXPECTED_CHAR;
   }
 
-  if (az_result_failed(json_child_token_move(json_reader, iot_hub_twin_desired_version))
-      || az_result_failed(az_json_token_get_int32(&json_reader->token, out_version)))
+  if (az_result_failed(json_child_token_move(&copy_json_reader, iot_hub_twin_desired_version))
+      || az_result_failed(az_json_token_get_int32(&copy_json_reader.token, out_version)))
   {
     return AZ_ERROR_UNEXPECTED_CHAR;
   }
