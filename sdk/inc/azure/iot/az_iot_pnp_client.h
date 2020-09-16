@@ -529,6 +529,7 @@ AZ_NODISCARD az_result az_iot_pnp_client_twin_end_property_with_status(
 AZ_NODISCARD az_result az_iot_pnp_client_twin_get_property_version(
     az_iot_pnp_client const* client,
     az_json_reader* json_reader,
+    bool is_partial,
     int32_t* out_version);
 
 /**
