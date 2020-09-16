@@ -837,7 +837,6 @@ static void process_twin_message(az_span twin_message_span, bool is_partial)
     exit(result);
   }
 
-  // this needs to be continuous until the return value isn't an expected one
   while (az_result_succeeded(
       result = az_iot_pnp_client_twin_get_next_component_property(
           &pnp_client, &jr, is_partial, &component_name, &property_name, &property_value)))
@@ -943,7 +942,7 @@ static void process_twin_message(az_span twin_message_span, bool is_partial)
         receive_mqtt_message();
       }
     }
-    else if (result == AZ_IOT_END_OF_COMPONENTS)
+    else if (result == AZ_IOT_END_OF_PROPERTIES)
     {
       break;
     }
