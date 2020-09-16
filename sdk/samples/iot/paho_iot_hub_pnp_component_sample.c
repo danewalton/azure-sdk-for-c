@@ -798,7 +798,7 @@ static void process_twin_message(az_span twin_message_span, bool is_partial)
   az_result result;
 
   az_json_reader jr;
-  az_json_token component_name;
+  az_span component_name;
   az_json_token property_name;
   az_json_reader property_value;
   int32_t version = 0;
@@ -824,131 +824,109 @@ static void process_twin_message(az_span twin_message_span, bool is_partial)
 
   // this needs to be continuous until the return value isn't an expected one
   while (az_result_succeeded(
-      result = az_iot_pnp_client_twin_get_next_component(
-          &pnp_client, &jr, is_partial, &component_name, &version)))
+      result = az_iot_pnp_client_twin_get_next_component_property_combo(
+          &pnp_client, &jr, is_partial, &component_name, &property_name, &property_value)))
   {
     if (result == AZ_OK)
     {
-      if (az_json_token_is_text_equal(&component_name, thermostat_1_name))
+      if (az_span_is_content_equal(component_name, thermostat_1_name))
       {
-        while ((result = az_iot_pnp_client_twin_get_next_component_property(
-                    &pnp_client, &jr, &property_name, &property_value))
-               == AZ_OK)
+        if (az_result_succeeded(
+                result = pnp_thermostat_process_property_update(
+                    &pnp_client,
+                    &thermostat_1,
+                    &property_name,
+                    &property_value,
+                    version,
+                    publish_message.payload,
+                    &publish_message.out_payload)))
         {
-          if (az_result_succeeded(
-                  result = pnp_thermostat_process_property_update(
-                      &pnp_client,
-                      &thermostat_1,
-                      &property_name,
-                      &property_value,
-                      version,
-                      publish_message.payload,
-                      &publish_message.out_payload)))
-          {
-            // Send response to the updated property.
-            publish_mqtt_message(
-                publish_message.topic, publish_message.out_payload, IOT_SAMPLE_MQTT_PUBLISH_QOS);
-            IOT_SAMPLE_LOG_SUCCESS("Client sent Temperature Sensor 1 reported property message:");
-            IOT_SAMPLE_LOG_AZ_SPAN("Payload:", publish_message.out_payload);
+          // Send response to the updated property.
+          publish_mqtt_message(
+              publish_message.topic, publish_message.out_payload, IOT_SAMPLE_MQTT_PUBLISH_QOS);
+          IOT_SAMPLE_LOG_SUCCESS("Client sent Temperature Sensor 1 reported property message:");
+          IOT_SAMPLE_LOG_AZ_SPAN("Payload:", publish_message.out_payload);
 
-            // Receive the response from the server.
-            receive_mqtt_message();
-          }
+          // Receive the response from the server.
+          receive_mqtt_message();
         }
       }
-      else if (az_json_token_is_text_equal(&component_name, thermostat_2_name))
+      else if (az_span_is_content_equal(component_name, thermostat_2_name))
       {
-        while ((result = az_iot_pnp_client_twin_get_next_component_property(
-                    &pnp_client, &jr, &property_name, &property_value))
-               == AZ_OK)
+        if (az_result_succeeded(
+                result = pnp_thermostat_process_property_update(
+                    &pnp_client,
+                    &thermostat_2,
+                    &property_name,
+                    &property_value,
+                    version,
+                    publish_message.payload,
+                    &publish_message.out_payload)))
         {
-          if (az_result_succeeded(
-                  result = pnp_thermostat_process_property_update(
-                      &pnp_client,
-                      &thermostat_2,
-                      &property_name,
-                      &property_value,
-                      version,
-                      publish_message.payload,
-                      &publish_message.out_payload)))
-          {
-            // Send response to the updated property.
-            publish_mqtt_message(
-                publish_message.topic, publish_message.out_payload, IOT_SAMPLE_MQTT_PUBLISH_QOS);
-            IOT_SAMPLE_LOG_SUCCESS("Client sent Temperature Sensor 2 reported property message:");
-            IOT_SAMPLE_LOG_AZ_SPAN("Payload:", publish_message.out_payload);
+          // Send response to the updated property.
+          publish_mqtt_message(
+              publish_message.topic, publish_message.out_payload, IOT_SAMPLE_MQTT_PUBLISH_QOS);
+          IOT_SAMPLE_LOG_SUCCESS("Client sent Temperature Sensor 2 reported property message:");
+          IOT_SAMPLE_LOG_AZ_SPAN("Payload:", publish_message.out_payload);
 
-            // Receive the response from the server.
-            receive_mqtt_message();
-          }
+          // Receive the response from the server.
+          receive_mqtt_message();
         }
       }
-      else if (az_json_token_is_text_equal(&component_name, device_information_name))
+      else if (az_span_is_content_equal(component_name, device_information_name))
       {
         // device_info_process_property_update(component_name, property_name, &property_value);
       }
-    }
-    else if (result == AZ_IOT_ITEM_NOT_COMPONENT)
-    {
-      if ((result = az_iot_pnp_client_twin_get_next_component_property(
-               &pnp_client, &jr, &property_name, &property_value))
-          == AZ_IOT_END_OF_PROPERTIES)
-      {
-        continue;
-      }
-      else if (az_result_failed(result))
+      else
       {
         IOT_SAMPLE_LOG_ERROR(
-            "Failed to get non component property: az_result return code 0x%08x.", result);
-        exit(result);
+            "Temperature Controller does not support writable property \"%.*s\". All writeable "
+            "properties are on sub-components.",
+            az_span_size(property_name.slice),
+            az_span_ptr(property_name.slice));
+
+        // Get the Twin Patch topic to send a reported property update.
+        result = az_iot_pnp_client_twin_patch_get_publish_topic(
+            &pnp_client,
+            pnp_mqtt_get_request_id(),
+            publish_message.topic,
+            publish_message.topic_length,
+            NULL);
+        if (az_result_failed(result))
+        {
+          IOT_SAMPLE_LOG_ERROR(
+              "Failed to get Twin Patch publish topic: az_result return code 0x%08x.", result);
+          exit(result);
+        }
+
+        // Build the root component error reported property message.
+        az_json_writer jw;
+        result = az_json_writer_init(&jw, publish_message.payload, NULL);
+
+        if (az_result_failed(
+                result = az_iot_pnp_client_twin_begin_property_with_status(
+                    &pnp_client,
+                    &jw,
+                    component_name,
+                    property_name.slice,
+                    AZ_IOT_STATUS_NOT_FOUND,
+                    version,
+                    twin_response_failed))
+            || az_result_failed(append_json_token(&jw, &property_value.token))
+            || az_result_failed(
+                result = az_iot_pnp_client_twin_end_property_with_status(
+                    &pnp_client, &jw, component_name)))
+
+          // Send error response to the updated property.
+          publish_mqtt_message(
+              publish_message.topic, publish_message.out_payload, IOT_SAMPLE_MQTT_PUBLISH_QOS);
+        IOT_SAMPLE_LOG_SUCCESS(
+            "Client sent Temperature Controller error status reported property message:");
+        IOT_SAMPLE_LOG_AZ_SPAN("Payload:", publish_message.out_payload);
+
+        // Receive the response from the server.
+        receive_mqtt_message();
       }
-      IOT_SAMPLE_LOG_ERROR(
-          "Temperature Controller does not support writable property \"%.*s\". All writeable "
-          "properties are on sub-components.",
-          az_span_size(property_name.slice),
-          az_span_ptr(property_name.slice));
-
-      // Get the Twin Patch topic to send a reported property update.
-      result = az_iot_pnp_client_twin_patch_get_publish_topic(
-          &pnp_client,
-          pnp_mqtt_get_request_id(),
-          publish_message.topic,
-          publish_message.topic_length,
-          NULL);
-      if (az_result_failed(result))
-      {
-        IOT_SAMPLE_LOG_ERROR(
-            "Failed to get Twin Patch publish topic: az_result return code 0x%08x.", result);
-        exit(result);
-      }
-
-      // Build the root component error reported property message.
-      az_json_writer jw;
-      result = az_json_writer_init(&jw, publish_message.payload, NULL);
-
-      if (az_result_failed(
-              result = az_iot_pnp_client_twin_begin_property_with_status(
-                  &pnp_client,
-                  &jw,
-                  component_name.slice,
-                  property_name.slice,
-                  AZ_IOT_STATUS_NOT_FOUND,
-                  version,
-                  twin_response_failed))
-          || az_result_failed(append_json_token(&jw, &property_value.token))
-          || az_result_failed(
-              result = az_iot_pnp_client_twin_end_property_with_status(
-                  &pnp_client, &jw, component_name.slice)))
-
-        // Send error response to the updated property.
-        publish_mqtt_message(
-            publish_message.topic, publish_message.out_payload, IOT_SAMPLE_MQTT_PUBLISH_QOS);
-      IOT_SAMPLE_LOG_SUCCESS(
-          "Client sent Temperature Controller error status reported property message:");
-      IOT_SAMPLE_LOG_AZ_SPAN("Payload:", publish_message.out_payload);
-
-      // Receive the response from the server.
-      receive_mqtt_message();
     }
     else if (result == AZ_IOT_END_OF_COMPONENTS)
     {
