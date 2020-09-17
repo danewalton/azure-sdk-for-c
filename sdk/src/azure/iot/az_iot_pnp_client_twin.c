@@ -324,45 +324,46 @@ AZ_NODISCARD az_result az_iot_pnp_client_twin_get_next_component_property(
       continue;
     }
 
-    // Check if in component depth
-    if ((is_partial && json_reader->_internal.bit_stack._internal.current_depth == 1)
-        || (!is_partial && json_reader->_internal.bit_stack._internal.current_depth == 2))
-    {
-      if (az_result_succeeded(
-              is_component_in_model(client, &json_reader->token, out_component_name)))
-      {
-        if (az_result_failed(az_json_reader_next_token(json_reader))
-            || (json_reader->token.kind != AZ_JSON_TOKEN_BEGIN_OBJECT)
-            || (az_result_failed(az_json_reader_next_token(json_reader))))
-        {
-          return AZ_ERROR_UNEXPECTED_CHAR;
-        }
-        if (az_result_failed(check_if_skipable(json_reader, is_partial)))
-        {
-          return AZ_ERROR_UNEXPECTED_CHAR;
-        }
-      }
-      else
-      {
-        *out_component_name = AZ_SPAN_EMPTY;
-      }
-    }
-
-    *out_property_name = json_reader->token;
-
-    if (az_result_failed(az_json_reader_next_token(json_reader)))
-    {
-      return AZ_ERROR_UNEXPECTED_CHAR;
-    }
-
-    *out_property_value = *json_reader;
-
-    if (az_result_failed(az_json_reader_skip_children(json_reader))
-        || az_result_failed(az_json_reader_next_token(json_reader)))
-    {
-      return AZ_ERROR_UNEXPECTED_CHAR;
-    }
-
-    return AZ_OK;
+    break;
   }
+
+  // Check if in component depth
+  if ((is_partial && json_reader->_internal.bit_stack._internal.current_depth == 1)
+      || (!is_partial && json_reader->_internal.bit_stack._internal.current_depth == 2))
+  {
+    if (az_result_succeeded(is_component_in_model(client, &json_reader->token, out_component_name)))
+    {
+      if (az_result_failed(az_json_reader_next_token(json_reader))
+          || (json_reader->token.kind != AZ_JSON_TOKEN_BEGIN_OBJECT)
+          || (az_result_failed(az_json_reader_next_token(json_reader))))
+      {
+        return AZ_ERROR_UNEXPECTED_CHAR;
+      }
+      if (az_result_failed(check_if_skipable(json_reader, is_partial)))
+      {
+        return AZ_ERROR_UNEXPECTED_CHAR;
+      }
+    }
+    else
+    {
+      *out_component_name = AZ_SPAN_EMPTY;
+    }
+  }
+
+  *out_property_name = json_reader->token;
+
+  if (az_result_failed(az_json_reader_next_token(json_reader)))
+  {
+    return AZ_ERROR_UNEXPECTED_CHAR;
+  }
+
+  *out_property_value = *json_reader;
+
+  if (az_result_failed(az_json_reader_skip_children(json_reader))
+      || az_result_failed(az_json_reader_next_token(json_reader)))
+  {
+    return AZ_ERROR_UNEXPECTED_CHAR;
+  }
+
+  return AZ_OK;
 }
