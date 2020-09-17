@@ -1041,9 +1041,9 @@ int test_az_iot_pnp_client_twin()
     cmocka_unit_test(test_az_iot_pnp_client_twin_get_next_component_property_succeed),
     cmocka_unit_test(test_az_iot_pnp_client_twin_get_next_component_property_two_succeed),
     cmocka_unit_test(test_az_iot_pnp_client_twin_get_next_component_property_long_succeed),
+    cmocka_unit_test(test_az_iot_pnp_client_twin_get_next_component_property_out_of_order_succeed),
     cmocka_unit_test(
         test_az_iot_pnp_client_twin_get_next_component_property_long_with_version_succeed),
-    cmocka_unit_test(test_az_iot_pnp_client_twin_get_next_component_property_out_of_order_succeed),
     cmocka_unit_test(test_az_iot_pnp_client_twin_begin_property_with_status_succeed),
     cmocka_unit_test(test_az_iot_pnp_client_twin_end_property_with_status_succeed),
   };
