@@ -26,7 +26,7 @@
 #define DOUBLE_DECIMAL_PLACE_DIGITS 2
 #define DEFAULT_START_TEMP_COUNT 1
 
-static char const iso_spec_time_format[] = "%Y-%m-%dT%H:%M:%S%z"; // ISO8601 Time Format
+static char const iso_spec_time_format[] = "%Y-%m-%dT%H:%M:%SZ"; // ISO8601 Time Format
 
 // IoT Hub Device Twin Values
 static az_span const twin_desired_temperature_property_name
