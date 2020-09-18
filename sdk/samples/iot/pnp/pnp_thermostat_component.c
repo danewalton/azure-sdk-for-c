@@ -260,8 +260,9 @@ az_result pnp_thermostat_process_property_update(
     az_json_writer jw;
     az_result rc = az_json_writer_init(&jw, payload, NULL);
 
-    if ((rc = az_json_writer_append_begin_object(&jw))
-        || (rc = az_iot_pnp_client_twin_begin_property_with_status(
+    if (az_result_failed(rc = az_json_writer_append_begin_object(&jw))
+        || az_result_failed(
+            rc = az_iot_pnp_client_twin_begin_property_with_status(
                 pnp_client,
                 &jw,
                 ref_thermostat_component->component_name,
@@ -269,11 +270,13 @@ az_result pnp_thermostat_process_property_update(
                 (int32_t)AZ_IOT_STATUS_OK,
                 version,
                 twin_response_success))
-        || (rc
+        || az_result_failed(
+            rc
             = az_json_writer_append_double(&jw, parsed_property_value, DOUBLE_DECIMAL_PLACE_DIGITS))
-        || (rc = az_iot_pnp_client_twin_end_property_with_status(
+        || az_result_failed(
+            rc = az_iot_pnp_client_twin_end_property_with_status(
                 pnp_client, &jw, ref_thermostat_component->component_name))
-        || (rc = az_json_writer_append_end_object(&jw)))
+        || az_result_failed(rc = az_json_writer_append_end_object(&jw)))
     {
       IOT_SAMPLE_LOG_ERROR(
           "Failed to create property with status payload, az_result return code 0x%08x.", rc);
