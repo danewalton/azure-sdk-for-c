@@ -42,13 +42,13 @@ static const char g_test_correct_topic_no_comp_with_options_with_props[]
       "key=value&key_two=value2";
 static const char g_test_correct_topic_with_options_with_props[]
     = "devices/my_device/modules/my_module_id/messages/events/"
-      "key=value&key_two=value2&$.sub=component_one";
+      "$.sub=component_one&key=value&key_two=value2";
 static const char g_test_correct_topic_no_options_with_props[]
     = "devices/my_device/messages/events/"
-      "key=value&key_two=value2&$.sub=component_one";
+      "$.sub=component_one&key=value&key_two=value2";
 static const char g_test_correct_topic_with_options_module_id_with_props[]
     = "devices/my_device/modules/my_module_id/messages/events/"
-      "key=value&key_two=value2&$.sub=component_one";
+      "$.sub=component_one&key=value&key_two=value2";
 
 #ifndef AZ_NO_PRECONDITION_CHECKING
 ENABLE_PRECONDITION_CHECK_TESTS()
