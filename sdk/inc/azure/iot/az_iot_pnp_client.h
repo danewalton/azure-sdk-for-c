@@ -5,6 +5,8 @@
  * @file az_iot_pnp_client.h
  *
  * @brief Definition for the Azure IoT PnP device SDK.
+ * 
+ * @warning THIS LIBRARY IS IN PREVIEW. APIS ARE SUBJECT TO CHANGE UNTIL GENERAL AVAILABILITY.
  */
 
 #ifndef _az_IOT_PNP_CLIENT_H
