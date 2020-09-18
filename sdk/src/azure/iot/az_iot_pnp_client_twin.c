@@ -7,7 +7,6 @@
 #include <azure/core/internal/az_result_internal.h>
 
 static const az_span iot_hub_twin_desired = AZ_SPAN_LITERAL_FROM_STR("desired");
-// static const az_span iot_hub_twin_reported = AZ_SPAN_LITERAL_FROM_STR("reported");
 static const az_span iot_hub_twin_desired_version = AZ_SPAN_LITERAL_FROM_STR("$version");
 static const az_span property_response_value_name = AZ_SPAN_LITERAL_FROM_STR("value");
 static const az_span property_ack_code_name = AZ_SPAN_LITERAL_FROM_STR("ac");

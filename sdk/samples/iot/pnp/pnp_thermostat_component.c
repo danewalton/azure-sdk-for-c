@@ -7,6 +7,7 @@
 #pragma warning(disable : 4996)
 #endif
 
+#include <azure/iot/az_iot_pnp_client.h>
 #include <iot_sample_common.h>
 
 #include "pnp_mqtt_message.h"
